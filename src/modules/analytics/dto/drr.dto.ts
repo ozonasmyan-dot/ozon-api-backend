@@ -3,20 +3,34 @@ export interface DrrRequestDto {
     dateTo: string;
     sku: string[];
 }
-
-export interface DrrResponseDto {
+export interface DrrProductDto {
+    sku: string;
     orders: {
-        items: {
-            sku: string;
-            item: number;
-        }[];
-        totals: number;
+        count: number;
+        sum: number;
     };
     ads: {
-        items: {
-            productId: string;
-            moneySpent: number;
-        }[];
-        totals: number;
+        cpo: number;
+        other: number;
+        total: number;
     };
+    drr: number;
+}
+
+export interface DrrTotalsDto {
+    orders: {
+        count: number;
+        sum: number;
+    };
+    ads: {
+        cpo: number;
+        other: number;
+        total: number;
+    };
+    drr: number;
+}
+
+export interface DrrResponseDto {
+    products: DrrProductDto[];
+    totals: DrrTotalsDto;
 }

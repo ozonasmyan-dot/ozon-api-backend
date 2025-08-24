@@ -108,14 +108,21 @@ export class UnitRepository {
             _sum: {
                 price: true,
             },
+            _count: {
+                sku: true,
+            },
         });
 
         return {
             items: orders.map(item => ({
                 sku: item.sku,
                 item: item._sum.price,
+                count: item._count.sku,
             })),
-            totals: orders.reduce((acc: any, item: any) => acc + item._sum.price, 0),
+            totals: {
+                item: orders.reduce((acc: any, item: any) => acc + item._sum.price, 0),
+                count: orders.reduce((acc: any, item: any) => acc + item._count.sku, 0),
+            },
         };
     }
 }

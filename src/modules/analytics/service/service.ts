@@ -46,12 +46,63 @@ export class AnalyticsService {
         const filteredAdsItems = sku.length ? ads.items.filter((i: any) => sku.includes(i.productId)) : ads.items;
         const filteredOrdersItems = sku.length ? orders.items.filter((i: any) => sku.includes(i.sku)) : orders.items;
 
-        const adsTotals = sku.length ? filteredAdsItems.reduce((acc: number, i: any) => acc + i.moneySpent, 0) : ads.totals;
-        const ordersTotals = sku.length ? filteredOrdersItems.reduce((acc: number, i: any) => acc + i.item, 0) : orders.totals;
+        const skuSet = new Set<string>([
+            ...filteredOrdersItems.map((o: any) => o.sku),
+            ...filteredAdsItems.map((a: any) => a.productId),
+        ]);
+
+        const products = Array.from(skuSet).map((id) => {
+            const order = filteredOrdersItems.find((o: any) => o.sku === id);
+            const adsForSku = filteredAdsItems.filter((a: any) => a.productId === id);
+
+            const cpo = adsForSku
+                .filter((a: any) => a.type === 'CPO')
+                .reduce((acc: number, curr: any) => acc + curr.moneySpent, 0);
+            const other = adsForSku
+                .filter((a: any) => a.type !== 'CPO')
+                .reduce((acc: number, curr: any) => acc + curr.moneySpent, 0);
+            const adsTotal = cpo + other;
+
+            const ordersSum = order?.item || 0;
+            const ordersCount = order?.count || 0;
+            const drr = ordersSum ? adsTotal / ordersSum : 0;
+
+            return {
+                sku: id,
+                orders: {
+                    sum: ordersSum,
+                    count: ordersCount,
+                },
+                ads: {
+                    cpo,
+                    other,
+                    total: adsTotal,
+                },
+                drr,
+            };
+        });
+
+        const totals = products.reduce(
+            (acc, p) => {
+                acc.orders.sum += p.orders.sum;
+                acc.orders.count += p.orders.count;
+                acc.ads.cpo += p.ads.cpo;
+                acc.ads.other += p.ads.other;
+                acc.ads.total += p.ads.total;
+                return acc;
+            },
+            {
+                orders: { sum: 0, count: 0 },
+                ads: { cpo: 0, other: 0, total: 0 },
+                drr: 0,
+            }
+        );
+
+        totals.drr = totals.orders.sum ? totals.ads.total / totals.orders.sum : 0;
 
         return {
-            ads: { items: filteredAdsItems, totals: adsTotals },
-            orders: { items: filteredOrdersItems, totals: ordersTotals },
+            products,
+            totals,
         };
     }
 }
