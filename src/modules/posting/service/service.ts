@@ -1,5 +1,5 @@
-import { postingsFetch } from "@/modules/posting/api/fetch.api";
-import { postingsFetchItem } from "@/modules/posting/api/fetch-item.api";
+import { postingsFetch } from "@/modules/posting/repository/fetch.api";
+import { postingsFetchItem } from "@/modules/posting/repository/fetch-item.api";
 import { PostingDto } from "@/modules/posting/dto/posting.dto";
 import decimal from "decimal.js";
 import { ApiPostingDto } from "@/modules/posting/dto/api-posting.dto";

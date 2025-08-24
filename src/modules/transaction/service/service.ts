@@ -1,5 +1,5 @@
-import {fetch} from "@/modules/transaction/api/fetch.api";
-import {FilterParams} from "@/modules/transaction/api/fetch.api";
+import {fetch} from "@/modules/transaction/repository/fetch.api";
+import {FilterParams} from "@/modules/transaction/repository/fetch.api";
 import {TransactionDto} from "@/modules/transaction/dto/transaction.dto";
 
 export class TransactionService {

@@ -6,7 +6,7 @@ import {
     fetchCampaignStatistics
 } from "@/api/modules/advertising";
 import {toNumber} from "@/utils/toNumber";
-import {AdvertisingRepository} from "@/modules/advertising/advertising.repository";
+import {AdvertisingRepository} from "@/modules/advertising/repository/repository";
 import {generateDatesFrom} from "@/utils/date.utils";
 import {fetchApiReportData} from "@/api/utils/report";
 import {get62DayRanges} from '@/utils/date.utils';

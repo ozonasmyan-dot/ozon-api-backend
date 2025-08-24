@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
-import {UnitRepository} from "@/modules/unit/unit.repository";
-import {AdvertisingRepository} from "@/modules/advertising/advertising.repository";
+import {UnitRepository} from "@/modules/unit/repository/repository";
+import {AdvertisingRepository} from "@/modules/advertising/repository/repository";
 
 export class AnalyticsService {
     constructor(
