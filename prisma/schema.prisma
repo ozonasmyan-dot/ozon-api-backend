@@ -1,0 +1,61 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Advertising {
+  id           String   @id @default(uuid())
+  campaignId   String
+  productId    String
+  type         String
+  moneySpent   Float
+  views        Int
+  clicks       Int
+  toCart       Int
+  ctr          Float
+  weeklyBudget Int
+  status       String
+  avgBid       Float
+  crToCart     Float
+  costPerCart  Float
+  savedAt      DateTime
+  orders       Int
+  ordersMoney  Float
+
+  @@unique([savedAt, campaignId])
+}
+
+model UnitNew {
+  id                   String    @id @default(cuid())
+  product              String
+  orderId              String
+  orderNumber          String
+  postingNumber        String
+  statusOzon           String
+  createdAt            DateTime
+  inProcessAt          DateTime
+  deliveryType         String
+  city                 String?
+  isPremium            Boolean
+  paymentTypeGroupName String
+  warehouseId          String
+  warehouseName        String
+  sku                  String
+  oldPrice             Int // в копейках
+  price                Int // в копейках
+  currencyCode         String
+  clusterFrom          String
+  clusterTo            String
+  status               String
+  margin               Int // в копейках
+  costPrice            Int // в копейках
+  totalServices        Int // в копейках
+  services             Json
+  lastOperationDate    DateTime?
+
+  @@unique([postingNumber])
+}
