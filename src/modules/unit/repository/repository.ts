@@ -158,4 +158,32 @@ export class UnitRepository {
             status: u.statusOzon,
         }));
     }
+
+    async getEconomyBySku(start: string, end: string): Promise<{ createdAt: Date; sku: string; statusOzon: string; margin: number; costPrice: number; totalServices: number }[]> {
+        const units = await this.prismaClient.unitNew.findMany({
+            where: {
+                createdAt: {
+                    gte: start,
+                    lte: end,
+                },
+            },
+            select: {
+                createdAt: true,
+                sku: true,
+                statusOzon: true,
+                margin: true,
+                costPrice: true,
+                totalServices: true,
+            },
+        });
+
+        return units.map((u) => ({
+            createdAt: u.createdAt,
+            sku: u.sku,
+            statusOzon: u.statusOzon,
+            margin: Number(u.margin),
+            costPrice: Number(u.costPrice),
+            totalServices: Number(u.totalServices),
+        }));
+    }
 }
