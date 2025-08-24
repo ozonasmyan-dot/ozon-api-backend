@@ -1,5 +1,5 @@
 import {performanceClient} from "@/infrastructure/clients/ozon/performance";
-import {toNumber} from "@/utils/toNumber";
+import {toNumber} from "@/shared/utils/toNumber";
 
 /**
  * Получает статистику всех кампаний

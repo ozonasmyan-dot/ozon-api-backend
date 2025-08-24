@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { unitService } from "@/modules/unit/service/service";
-import { AppError } from "@/errors/AppError";
+import { AppError } from "@/shared/types/AppError";
 
 export const unitController = {
     async sync(req: Request, res: Response): Promise<any> {

@@ -9,8 +9,21 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "baseUrl": ".",
-    "typeRoots": ["./src/types", "./node_modules/@types"],
-    "paths": { "@/*": ["src/*"] }
+    "typeRoots": [
+      "./src/shared/types",
+      "./node_modules/@types"
+    ],
+    "paths": {
+      "@/*": [
+        "src/*"
+      ],
+      "@/shared/*": [
+        "src/shared/*"
+      ]
+    }
   },
-  "include": ["src", "src/types"]
+  "include": [
+    "src",
+    "src/shared/types"
+  ]
 }
