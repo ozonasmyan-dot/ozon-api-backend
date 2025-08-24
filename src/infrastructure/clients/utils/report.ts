@@ -1,4 +1,4 @@
-import {performanceClient} from '@/api/ozon/performance';
+import {performanceClient} from '@/infrastructure/clients/ozon/performance';
 import {logger} from "@/utils/logger";
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));

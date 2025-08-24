@@ -4,11 +4,11 @@ import {
     fetchCampaignObjects,
     fetchCampaignList,
     fetchCampaignStatistics
-} from "@/api/modules/advertising";
+} from "@/infrastructure/clients/modules/advertising";
 import {toNumber} from "@/utils/toNumber";
 import {AdvertisingRepository} from "@/modules/advertising/repository/repository";
 import {generateDatesFrom} from "@/utils/date.utils";
-import {fetchApiReportData} from "@/api/utils/report";
+import {fetchApiReportData} from "@/infrastructure/clients/utils/report";
 import {get62DayRanges} from '@/utils/date.utils';
 
 
