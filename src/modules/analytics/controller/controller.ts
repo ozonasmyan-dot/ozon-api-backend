@@ -25,8 +25,8 @@ export const analyticsController = {
         const { from, to, sku } = req.query;
 
         const query: BuyoutRequestDto = {
-            from: String(from),
-            to: String(to),
+            from: from ? String(from) : dayjs().subtract(1, 'month').format('YYYY-MM-DD'),
+            to: to ? String(to) : dayjs().format('YYYY-MM-DD'),
             sku: Array.isArray(sku) ? sku.map(String) : typeof sku === 'string' ? [sku] : [],
         };
 
@@ -38,8 +38,8 @@ export const analyticsController = {
         const { from, to, sku } = req.query;
 
         const query: MarginRequestDto = {
-            from: String(from),
-            to: String(to),
+            from: from ? String(from) : dayjs().subtract(1, 'month').format('YYYY-MM-DD'),
+            to: to ? String(to) : dayjs().format('YYYY-MM-DD'),
             sku: Array.isArray(sku) ? sku.map(String) : typeof sku === 'string' ? [sku] : [],
         };
 
