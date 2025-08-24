@@ -1,5 +1,6 @@
 import {PrismaClient, Advertising} from "@prisma/client";
 import prisma from "@/infrastructure/database/prismaClient";
+import {AdItem} from "@/modules/analytics/dto/items.dto";
 
 export class AdvertisingRepository {
     constructor(private prismaClient: PrismaClient = prisma) {
@@ -58,7 +59,7 @@ export class AdvertisingRepository {
         });
     }
 
-    async getAdsAggByProductType(start: string, end: string) {
+    async getAdsAggByProductType(start: string, end: string): Promise<{ items: AdItem[]; totals: number }> {
         console.log(start, end, 'asdasd');
 
         const totals = await this.prismaClient.advertising.groupBy({
@@ -77,13 +78,16 @@ export class AdvertisingRepository {
             },
         });
 
+        const items: AdItem[] = totals.map(i => ({
+            moneySpent: i._sum.moneySpent ?? 0,
+            productId: i.productId,
+            type: i.type,
+        }));
+        const total = items.reduce((acc, item) => acc + item.moneySpent, 0);
+
         return {
-            items: totals.map(i => ({
-                moneySpent: i._sum.moneySpent,
-                productId: i.productId,
-                type: i.type,
-            })),
-            totals: totals.reduce((acc: any, item: any) => acc + item._sum.moneySpent, 0),
-        }
+            items,
+            totals: total,
+        };
     }
 }

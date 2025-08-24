@@ -3,6 +3,7 @@ import {UnitRepository} from '@/modules/unit/repository/repository';
 import {AdvertisingRepository} from '@/modules/advertising/repository/repository';
 import {logger} from '@/shared/logger';
 import {DrrRequestDto, DrrResponseDto} from "@/modules/analytics/dto/drr.dto";
+import {AdItem, OrderItem} from "@/modules/analytics/dto/items.dto";
 
 export class AnalyticsService {
     constructor(
@@ -24,17 +25,17 @@ export class AnalyticsService {
             dayjs(date).format('YYYY-MM-DD[T]21:00:00[Z]'),
         );
 
-        const filteredAdsItems = sku.length ? ads.items.filter((i: any) => sku.includes(i.productId)) : ads.items;
-        const filteredOrdersItems = sku.length ? orders.items.filter((i: any) => sku.includes(i.sku)) : orders.items;
+        const filteredAdsItems = sku.length ? ads.items.filter((i: AdItem) => sku.includes(i.productId)) : ads.items;
+        const filteredOrdersItems = sku.length ? orders.items.filter((i: OrderItem) => sku.includes(i.sku)) : orders.items;
 
         const skuSet = new Set<string>([
-            ...filteredOrdersItems.map((o: any) => o.sku),
-            ...filteredAdsItems.map((a: any) => a.productId),
+            ...filteredOrdersItems.map((o: OrderItem) => o.sku),
+            ...filteredAdsItems.map((a: AdItem) => a.productId),
         ]);
 
         const products = Array.from(skuSet).map((id) => {
-            const order = filteredOrdersItems.find((o: any) => o.sku === id);
-            const adsForSku = filteredAdsItems.filter((a: any) => a.productId === id);
+            const order = filteredOrdersItems.find((o: OrderItem) => o.sku === id);
+            const adsForSku = filteredAdsItems.filter((a: AdItem) => a.productId === id);
 
             const adsItems = adsForSku.map((a: any) => ({
                 type: a.type,
@@ -42,7 +43,7 @@ export class AnalyticsService {
             }));
             const adsTotal = adsItems.reduce((acc: number, curr: any) => acc + curr.money, 0);
 
-            const ordersMoney = order?.item || 0;
+            const ordersMoney = order?.money || 0;
             const ordersCount = order?.count || 0;
             const drr = ordersMoney ? adsTotal / ordersMoney : 0;
 

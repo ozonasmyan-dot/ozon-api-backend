@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient, UnitNew } from '@prisma/client';
 import { UnitDto } from "@/modules/unit/dto/unit.dto";
 import prisma from "@/infrastructure/database/prismaClient";
+import { OrderItem } from "@/modules/analytics/dto/items.dto";
 
 export class UnitRepository {
     constructor(private prismaClient: PrismaClient = prisma) {}
@@ -94,7 +95,7 @@ export class UnitRepository {
         });
     }
 
-    async getUnitsRevenueBySku(start: string, end: string) {
+    async getUnitsRevenueBySku(start: string, end: string): Promise<{ items: OrderItem[]; totals: { money: number; count: number } }> {
         const orders = await this.prismaClient.unitNew.groupBy({
             by: [
                 "sku",
@@ -113,16 +114,23 @@ export class UnitRepository {
             },
         });
 
-        return {
-            items: orders.map(item => ({
-                sku: item.sku,
-                item: item._sum.price,
-                count: item._count.sku,
-            })),
-            totals: {
-                item: orders.reduce((acc: any, item: any) => acc + item._sum.price, 0),
-                count: orders.reduce((acc: any, item: any) => acc + item._count.sku, 0),
+        const items: OrderItem[] = orders.map(item => ({
+            sku: item.sku,
+            money: item._sum.price ?? 0,
+            count: item._count.sku,
+        }));
+        const totals = items.reduce(
+            (acc, item) => {
+                acc.money += item.money;
+                acc.count += item.count;
+                return acc;
             },
+            { money: 0, count: 0 }
+        );
+
+        return {
+            items,
+            totals,
         };
     }
 }
