@@ -6,7 +6,8 @@
     "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/index.js",
-    "deploy": "gh-pages -d ./"
+    "deploy": "gh-pages -d ./",
+    "bot": "ts-node src/bot.ts"
   },
   "_moduleAliases": {
     "@": "dist"
