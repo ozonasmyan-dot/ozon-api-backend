@@ -121,8 +121,8 @@ export class AnalyticsService {
         grouped.forEach((skuMap, month) => {
             const items: BuyoutItemDto[] = [];
             skuMap.forEach((data, id) => {
-                const delivered = data.statuses['delivered'] || 0;
-                const buyout = data.total ? delivered / data.total : 0;
+                const delivered = data.statuses['Доставлен'] || 0;
+                const buyout = Math.floor((data.total ? delivered / data.total : 0) * 100);
                 items.push({ sku: id, statuses: data.statuses, buyout });
             });
             result.push({ month, items });

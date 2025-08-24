@@ -7,6 +7,7 @@ import cors from "cors";
 import { PORT, CORS_ORIGIN } from '@/config';
 import errorHandler from "@/shared/middleware/errorHandler";
 import { logger } from '@/shared/logger';
+import '@/bot';
 
 const app = express();
 
