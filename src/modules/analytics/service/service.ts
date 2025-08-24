@@ -1,7 +1,6 @@
 import dayjs from "dayjs";
 import {UnitRepository} from '@/modules/unit/repository/repository';
 import {AdvertisingRepository} from '@/modules/advertising/repository/repository';
-import {logger} from '@/shared/logger';
 import {DrrRequestDto, DrrResponseDto} from "@/modules/analytics/dto/drr.dto";
 import {AdItem, OrderItem} from "@/modules/analytics/dto/items.dto";
 
@@ -13,8 +12,6 @@ export class AnalyticsService {
     }
 
     async getDrr({date, sku}: DrrRequestDto): Promise<DrrResponseDto> {
-        logger.info({date, sku}, 'Получение DRR');
-
         const ads = await this.adsRepo.getAdsAggByProductType(
             dayjs(date).format('YYYY-MM-DD[T]00:00:00[Z]'),
             dayjs(date).format('YYYY-MM-DD[T]23:59:59[Z]'),
@@ -45,7 +42,7 @@ export class AnalyticsService {
 
             const ordersMoney = order?.money || 0;
             const ordersCount = order?.count || 0;
-            const drr = ordersMoney ? adsTotal / ordersMoney : 0;
+            const drr = Math.floor((ordersMoney ? adsTotal / ordersMoney : 0) * 100);
 
             return {
                 sku: id,
@@ -83,7 +80,7 @@ export class AnalyticsService {
             }
         );
 
-        totals.drr = totals.orders.money ? totals.ads.totals / totals.orders.money : 0;
+        totals.drr = totals.orders.money ? Math.floor((totals.ads.totals / totals.orders.money) * 100) : 0;
 
         return {
             products,

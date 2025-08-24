@@ -60,8 +60,6 @@ export class AdvertisingRepository {
     }
 
     async getAdsAggByProductType(start: string, end: string): Promise<{ items: AdItem[]; totals: number }> {
-        console.log(start, end, 'asdasd');
-
         const totals = await this.prismaClient.advertising.groupBy({
             by: [
                 "productId",

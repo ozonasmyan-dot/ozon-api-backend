@@ -1,10 +1,11 @@
-import { Prisma, PrismaClient, UnitNew } from '@prisma/client';
-import { UnitDto } from "@/modules/unit/dto/unit.dto";
+import {Prisma, PrismaClient, UnitNew} from '@prisma/client';
+import {UnitDto} from "@/modules/unit/dto/unit.dto";
 import prisma from "@/infrastructure/database/prismaClient";
-import { OrderItem } from "@/modules/analytics/dto/items.dto";
+import {OrderItem} from "@/modules/analytics/dto/items.dto";
 
 export class UnitRepository {
-    constructor(private prismaClient: PrismaClient = prisma) {}
+    constructor(private prismaClient: PrismaClient = prisma) {
+    }
 
     async create(data: Omit<UnitDto, 'id'>): Promise<UnitNew> {
         return this.prismaClient.unitNew.upsert({
@@ -95,7 +96,10 @@ export class UnitRepository {
         });
     }
 
-    async getUnitsRevenueBySku(start: string, end: string): Promise<{ items: OrderItem[]; totals: { money: number; count: number } }> {
+    async getUnitsRevenueBySku(start: string, end: string): Promise<{
+        items: OrderItem[];
+        totals: { money: number; count: number }
+    }> {
         const orders = await this.prismaClient.unitNew.groupBy({
             by: [
                 "sku",
@@ -125,7 +129,7 @@ export class UnitRepository {
                 acc.count += item.count;
                 return acc;
             },
-            { money: 0, count: 0 }
+            {money: 0, count: 0}
         );
 
         return {
