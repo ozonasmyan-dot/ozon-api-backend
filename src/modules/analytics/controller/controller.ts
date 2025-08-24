@@ -3,6 +3,7 @@ import container from '@/infrastructure/di/container';
 import { AnalyticsService } from "@/modules/analytics/service/service";
 import { DrrRequestDto, DrrResponseDto } from "@/modules/analytics/dto/drr.dto";
 import { BuyoutRequestDto, BuyoutMonthDto } from "@/modules/analytics/dto/buyout.dto";
+import { MarginRequestDto, MarginMonthDto } from "@/modules/analytics/dto/margin.dto";
 import dayjs from "dayjs";
 
 const analyticsService = container.resolve(AnalyticsService);
@@ -30,6 +31,19 @@ export const analyticsController = {
         };
 
         const data: BuyoutMonthDto[] = await analyticsService.getBuyout(query);
+
+        res.json({ data });
+    },
+    async getMargin(req: Request, res: Response) {
+        const { from, to, sku } = req.query;
+
+        const query: MarginRequestDto = {
+            from: String(from),
+            to: String(to),
+            sku: Array.isArray(sku) ? sku.map(String) : typeof sku === 'string' ? [sku] : [],
+        };
+
+        const data: MarginMonthDto[] = await analyticsService.getMargin(query);
 
         res.json({ data });
     },
