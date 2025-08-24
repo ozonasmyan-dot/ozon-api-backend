@@ -6,7 +6,6 @@
     "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/index.js",
-    "test": "jest",
     "deploy": "gh-pages -d ./"
   },
   "_moduleAliases": {
