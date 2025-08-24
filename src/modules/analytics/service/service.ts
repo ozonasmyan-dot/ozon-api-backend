@@ -36,28 +36,25 @@ export class AnalyticsService {
             const order = filteredOrdersItems.find((o: any) => o.sku === id);
             const adsForSku = filteredAdsItems.filter((a: any) => a.productId === id);
 
-            const cpo = adsForSku
-                .filter((a: any) => a.type === 'CPO')
-                .reduce((acc: number, curr: any) => acc + curr.moneySpent, 0);
-            const other = adsForSku
-                .filter((a: any) => a.type !== 'CPO')
-                .reduce((acc: number, curr: any) => acc + curr.moneySpent, 0);
-            const adsTotal = cpo + other;
+            const adsItems = adsForSku.map((a: any) => ({
+                type: a.type,
+                money: a.moneySpent,
+            }));
+            const adsTotal = adsItems.reduce((acc: number, curr: any) => acc + curr.money, 0);
 
-            const ordersSum = order?.item || 0;
+            const ordersMoney = order?.item || 0;
             const ordersCount = order?.count || 0;
-            const drr = ordersSum ? adsTotal / ordersSum : 0;
+            const drr = ordersMoney ? adsTotal / ordersMoney : 0;
 
             return {
                 sku: id,
                 orders: {
-                    sum: ordersSum,
+                    money: ordersMoney,
                     count: ordersCount,
                 },
                 ads: {
-                    cpo,
-                    other,
-                    total: adsTotal,
+                    items: adsItems,
+                    totals: adsTotal,
                 },
                 drr,
             };
@@ -65,21 +62,27 @@ export class AnalyticsService {
 
         const totals = products.reduce(
             (acc, p) => {
-                acc.orders.sum += p.orders.sum;
+                acc.orders.money += p.orders.money;
                 acc.orders.count += p.orders.count;
-                acc.ads.cpo += p.ads.cpo;
-                acc.ads.other += p.ads.other;
-                acc.ads.total += p.ads.total;
+                acc.ads.totals += p.ads.totals;
+                p.ads.items.forEach((item) => {
+                    const existing = acc.ads.items.find((i) => i.type === item.type);
+                    if (existing) {
+                        existing.money += item.money;
+                    } else {
+                        acc.ads.items.push({...item});
+                    }
+                });
                 return acc;
             },
             {
-                orders: {sum: 0, count: 0},
-                ads: {cpo: 0, other: 0, total: 0},
+                orders: {money: 0, count: 0},
+                ads: {items: [] as { type: string; money: number }[], totals: 0},
                 drr: 0,
             }
         );
 
-        totals.drr = totals.orders.sum ? totals.ads.total / totals.orders.sum : 0;
+        totals.drr = totals.orders.money ? totals.ads.totals / totals.orders.money : 0;
 
         return {
             products,
