@@ -1,5 +1,5 @@
 import {performanceClient} from '@/infrastructure/clients/ozon/performance';
-import {logger} from "@/shared/utils/logger";
+import { logger } from '@/shared/logger';
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
@@ -61,7 +61,7 @@ const generateReport = async ({url, params}: {
         const reqUrl = error?.config?.url;
         const message = error?.response?.data?.error || error?.message || 'Неизвестная ошибка';
 
-        console.error(`❌ Ошибка запроса [${status}] ${reqUrl}: ${message}`);
+        logger.error({ err: error, status, url: reqUrl }, `❌ Ошибка запроса: ${message}`);
         throw error;
     }
 };

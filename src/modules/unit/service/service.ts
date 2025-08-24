@@ -1,12 +1,13 @@
-import dayjs from "dayjs";
-import minMax from "dayjs/plugin/minMax";
-import {PostingsService} from "@/modules/posting/service/service";
-import {TransactionService} from "@/modules/transaction/service/service";
-import {UnitDto} from "@/modules/unit/dto/unit.dto";
-import {economy} from "@/modules/unit/utils/economy.utils";
-import {TransactionDto} from "@/modules/transaction/dto/transaction.dto";
-import {UnitRepository} from "@/modules/unit/repository/repository";
-import {PostingDto} from "@/modules/posting/dto/posting.dto";
+import dayjs from 'dayjs';
+import minMax from 'dayjs/plugin/minMax';
+import { PostingsService } from '@/modules/posting/service/service';
+import { TransactionService } from '@/modules/transaction/service/service';
+import { UnitDto } from '@/modules/unit/dto/unit.dto';
+import { economy } from '@/modules/unit/utils/economy.utils';
+import { TransactionDto } from '@/modules/transaction/dto/transaction.dto';
+import { UnitRepository } from '@/modules/unit/repository/repository';
+import { PostingDto } from '@/modules/posting/dto/posting.dto';
+import { logger } from '@/shared/logger';
 
 dayjs.extend(minMax);
 
@@ -61,6 +62,8 @@ export class UnitService {
     }
 
     async firstSync() {
+        logger.info('Starting initial unit synchronization');
+
         const units: UnitDto[] = [];
 
         const postings = await this.postingsService.get({
@@ -100,6 +103,8 @@ export class UnitService {
     async saveNewUnits(): Promise<void> {
         const lastDate = await this.unitRepo.lastPostingDate();
 
+        logger.info('Saving new units');
+
         const postings = await this.postingsService.get({
             since: lastDate ? dayjs(lastDate).format('YYYY-MM-DD') + 'T00:00:00Z' : dayjs('2025-08-19').format('YYYY-MM-DD') + 'T00:00:00Z',
             to: dayjs(new Date()).format('YYYY-MM-DD') + 'T23:59:59Z',
@@ -130,6 +135,8 @@ export class UnitService {
     }
 
     async combinePostingsAndTransactions() {
+        logger.info('Combining postings and transactions');
+
         const transactions = await this.getNewTransactions();
 
         const results = await Promise.allSettled(
@@ -159,11 +166,13 @@ export class UnitService {
         const emptyUnits = (await this.unitRepo.rowsCount()) === 0;
 
         if (emptyUnits) {
+            logger.info('No units found, performing first sync');
             const units = await this.firstSync();
 
             await this.unitRepo.saveMany(units);
         }
 
+        logger.info('Updating statuses for undelivered units');
         await this.updateNotDeliveredUnitsStatus();
 
         await this.saveNewUnits();

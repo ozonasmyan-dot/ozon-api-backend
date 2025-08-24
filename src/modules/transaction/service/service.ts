@@ -1,9 +1,12 @@
-import {fetch} from "@/modules/transaction/repository/fetch.api";
-import {FilterParams} from "@/modules/transaction/repository/fetch.api";
-import {TransactionDto} from "@/modules/transaction/dto/transaction.dto";
+import { fetch } from '@/modules/transaction/repository/fetch.api';
+import { FilterParams } from '@/modules/transaction/repository/fetch.api';
+import { TransactionDto } from '@/modules/transaction/dto/transaction.dto';
+import { logger } from '@/shared/logger';
 
 export class TransactionService {
     async get(params: FilterParams): Promise<TransactionDto[]> {
+        logger.info({ params }, 'Fetching transactions');
+
         let transactions: TransactionDto[] = [];
 
         const transactionsQuery = await fetch({
@@ -25,9 +28,11 @@ export class TransactionService {
     }
 
     async getByRangeMap(params: FilterParams, datesMap: { from: string, to: string }[]): Promise<TransactionDto[]> {
+        logger.info({ params, datesMap }, 'Fetching transactions by range map');
+
         let transactions: TransactionDto[] = [];
 
-        for (const {from, to} of datesMap) {
+        for (const { from, to } of datesMap) {
             const t = await this.get({
                 filter: {
                     date: {

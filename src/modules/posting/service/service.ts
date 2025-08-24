@@ -1,15 +1,18 @@
-import { postingsFetch } from "@/modules/posting/repository/fetch.api";
-import { postingsFetchItem } from "@/modules/posting/repository/fetch-item.api";
-import { PostingDto } from "@/modules/posting/dto/posting.dto";
-import decimal from "decimal.js";
-import { ApiPostingDto } from "@/modules/posting/dto/api-posting.dto";
-import { AppError } from "@/shared/types/AppError";
+import { postingsFetch } from '@/modules/posting/repository/fetch.api';
+import { postingsFetchItem } from '@/modules/posting/repository/fetch-item.api';
+import { PostingDto } from '@/modules/posting/dto/posting.dto';
+import decimal from 'decimal.js';
+import { ApiPostingDto } from '@/modules/posting/dto/api-posting.dto';
+import { AppError } from '@/shared/types/AppError';
+import { logger } from '@/shared/logger';
 
 export class PostingsService {
     async get(
         { since, to }:
         { since: string | Date, to: string | Date }
     ): Promise<PostingDto[]> {
+        logger.info({ since, to }, 'Fetching postings');
+
         let postingsList: PostingDto[] = [];
 
         try {
@@ -49,6 +52,7 @@ export class PostingsService {
                 });
             }
         } catch (error) {
+            logger.error({ err: error }, 'Failed to fetch postings');
             throw new AppError('Failed to fetch postings', 502, error);
         }
 
@@ -56,9 +60,12 @@ export class PostingsService {
     }
 
     async getItemByPostingNumber(postingNumber: string): Promise<PostingDto> {
+        logger.info({ postingNumber }, 'Fetching posting by number');
+
         const postingApi: ApiPostingDto | null = await postingsFetchItem(postingNumber);
 
         if (!postingApi) {
+            logger.warn({ postingNumber }, 'Posting not found');
             throw new AppError('Posting not found', 404);
         }
 

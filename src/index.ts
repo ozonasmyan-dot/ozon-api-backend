@@ -5,7 +5,8 @@ import advertisingRouter from "@/modules/advertising/route";
 import analyticsRouter from "@/modules/analytics/route";
 import cors from "cors";
 import { PORT, CORS_ORIGIN } from '@/config';
-import errorHandler from "@/shared/middleware/error.middleware";
+import errorHandler from "@/shared/middleware/errorHandler";
+import { logger } from '@/shared/logger';
 
 const app = express();
 
@@ -21,5 +22,5 @@ app.use("/analytics", analyticsRouter);
 app.use(errorHandler);
 
 app.listen(PORT, () => {
-    console.log(`🚀 Server is running at http://localhost:${PORT}`);
+    logger.info(`🚀 Server is running at http://localhost:${PORT}`);
 });
