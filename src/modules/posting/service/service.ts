@@ -3,7 +3,7 @@ import { postingsFetchItem } from "@/modules/posting/repository/fetch-item.api";
 import { PostingDto } from "@/modules/posting/dto/posting.dto";
 import decimal from "decimal.js";
 import { ApiPostingDto } from "@/modules/posting/dto/api-posting.dto";
-import { AppError } from "@/errors/AppError";
+import { AppError } from "@/shared/types/AppError";
 
 export class PostingsService {
     async get(

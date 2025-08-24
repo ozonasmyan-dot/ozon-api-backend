@@ -1,15 +1,15 @@
-import {logger} from '@/utils/logger';
+import {logger} from '@/shared/utils/logger';
 import {
     fetchDailyCampaignStatistics,
     fetchCampaignObjects,
     fetchCampaignList,
     fetchCampaignStatistics
 } from "@/infrastructure/clients/modules/advertising";
-import {toNumber} from "@/utils/toNumber";
+import {toNumber} from "@/shared/utils/toNumber";
 import {AdvertisingRepository} from "@/modules/advertising/repository/repository";
-import {generateDatesFrom} from "@/utils/date.utils";
+import {generateDatesFrom} from "@/shared/utils/date.utils";
 import {fetchApiReportData} from "@/infrastructure/clients/utils/report";
-import {get62DayRanges} from '@/utils/date.utils';
+import {get62DayRanges} from '@/shared/utils/date.utils';
 
 
 const parseDDMMYYYYToISO = (ddmmyyyy: string): string => {

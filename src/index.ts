@@ -4,7 +4,7 @@ import advertisingRouter from "@/modules/advertising/route";
 import analyticsRouter from "@/modules/analytics/route";
 import cors from "cors";
 import { PORT, CORS_ORIGIN } from '@/config';
-import errorHandler from "@/middleware/error.middleware";
+import errorHandler from "@/shared/middleware/error.middleware";
 
 const app = express();
 

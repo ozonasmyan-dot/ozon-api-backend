@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { advertisingController } from '@/modules/advertising/controller/controller';
-import asyncHandler from '@/utils/asyncHandler';
+import asyncHandler from '@/shared/utils/asyncHandler';
 
 const router = Router();
 router.get('/sync', asyncHandler(advertisingController.sync));
