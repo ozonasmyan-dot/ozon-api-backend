@@ -90,9 +90,8 @@ export class AnalyticsService {
         };
     }
 
-    async getBuyout({from, to, sku}: BuyoutRequestDto): Promise<BuyoutMonthDto[]> {
+    async getBuyout({ from, to, sku }: BuyoutRequestDto): Promise<BuyoutMonthDto[]> {
         logger.info({from, to, sku}, 'Получение выкупа');
-
         const units = await this.unitRepo.getStatusCountsBySku(
             dayjs(from).format('YYYY-MM-DD[T]00:00:00[Z]'),
             dayjs(to).format('YYYY-MM-DD[T]23:59:59[Z]'),
@@ -109,7 +108,7 @@ export class AnalyticsService {
             }
             const skuMap = grouped.get(month)!;
             if (!skuMap.has(u.sku)) {
-                skuMap.set(u.sku, {statuses: {}, total: 0});
+                skuMap.set(u.sku, { statuses: {}, total: 0 });
             }
             const data = skuMap.get(u.sku)!;
             data.statuses[u.status] = (data.statuses[u.status] || 0) + 1;
@@ -120,12 +119,15 @@ export class AnalyticsService {
 
         grouped.forEach((skuMap, month) => {
             const items: BuyoutItemDto[] = [];
+
             skuMap.forEach((data, id) => {
-                const delivered = data.statuses['delivered'] || 0;
-                const buyout = Math.floor(data.total ? delivered / data.total : 0) * 100;
-                items.push({sku: id, statuses: data.statuses, buyout});
+                const delivered = data.statuses['Доставлен'] || 0;
+                const buyout = Math.floor((data.total ? delivered / data.total : 0) * 100);
+
+                items.push({ sku: id, statuses: data.statuses, buyout });
             });
-            result.push({month, items});
+
+            result.push({ month, items });
         });
 
         return result;

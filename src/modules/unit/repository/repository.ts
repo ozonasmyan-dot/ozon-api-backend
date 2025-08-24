@@ -148,14 +148,14 @@ export class UnitRepository {
             select: {
                 createdAt: true,
                 sku: true,
-                statusOzon: true,
+                status: true,
             },
         });
 
         return units.map((u) => ({
             createdAt: u.createdAt,
             sku: u.sku,
-            status: u.statusOzon,
+            status: u.status,
         }));
     }
 }
