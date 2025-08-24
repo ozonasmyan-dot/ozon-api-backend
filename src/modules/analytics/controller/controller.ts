@@ -1,5 +1,8 @@
 import {Request, Response} from "express";
-import {analyticsService} from "@/modules/analytics/service/service";
+import container from '@/infrastructure/di/container';
+import {AnalyticsService} from "@/modules/analytics/service/service";
+
+const analyticsService = container.resolve(AnalyticsService);
 
 export const analyticsController = {
     async getDrrByDate(req: Request, res: Response) {

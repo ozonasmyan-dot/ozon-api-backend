@@ -23,7 +23,7 @@ const safeNumber = (val: any): number => {
 };
 
 export class AdvertisingService {
-    constructor(private adsRepo = new AdvertisingRepository()) {
+    constructor(private adsRepo: AdvertisingRepository) {
     }
 
     async buildCompany(campaign: any) {
@@ -201,5 +201,3 @@ export class AdvertisingService {
         return 'ОК';
     }
 }
-
-export const advertisingService = new AdvertisingService();
