@@ -6,12 +6,11 @@ export interface DrrProductDto {
     sku: string;
     orders: {
         count: number;
-        sum: number;
+        money: number;
     };
     ads: {
-        cpo: number;
-        other: number;
-        total: number;
+        items: { type: string; money: number }[];
+        totals: number;
     };
     drr: number;
 }
@@ -19,12 +18,11 @@ export interface DrrProductDto {
 export interface DrrTotalsDto {
     orders: {
         count: number;
-        sum: number;
+        money: number;
     };
     ads: {
-        cpo: number;
-        other: number;
-        total: number;
+        items: { type: string; money: number }[];
+        totals: number;
     };
     drr: number;
 }

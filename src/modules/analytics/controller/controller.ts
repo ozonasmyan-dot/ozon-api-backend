@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import container from '@/infrastructure/di/container';
 import { AnalyticsService } from "@/modules/analytics/service/service";
-import { DrrRequestDto } from "@/modules/analytics/dto/drr.dto";
+import { DrrRequestDto, DrrResponseDto } from "@/modules/analytics/dto/drr.dto";
 
 const analyticsService = container.resolve(AnalyticsService);
 
@@ -14,7 +14,7 @@ export const analyticsController = {
             sku: Array.isArray(sku) ? sku.map(String) : typeof sku === 'string' ? [sku] : [],
         };
 
-        const data = await analyticsService.getDrr(query);
+        const data: DrrResponseDto = await analyticsService.getDrr(query);
 
         res.json({ data });
     },
