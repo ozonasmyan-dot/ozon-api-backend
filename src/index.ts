@@ -1,4 +1,5 @@
 import express from 'express';
+import '@/infrastructure/di/container';
 import unitRouter from "@/modules/unit/route";
 import advertisingRouter from "@/modules/advertising/route";
 import analyticsRouter from "@/modules/analytics/route";

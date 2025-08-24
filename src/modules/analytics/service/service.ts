@@ -4,8 +4,8 @@ import {AdvertisingRepository} from "@/modules/advertising/repository/repository
 
 export class AnalyticsService {
     constructor(
-        private unitRepo = new UnitRepository(),
-        private adsRepo = new AdvertisingRepository(),
+        private unitRepo: UnitRepository,
+        private adsRepo: AdvertisingRepository,
     ) {
     }
 
@@ -26,5 +26,3 @@ export class AnalyticsService {
         }
     }
 }
-
-export const analyticsService = new AnalyticsService();

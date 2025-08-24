@@ -12,9 +12,9 @@ dayjs.extend(minMax);
 
 export class UnitService {
     constructor(
-        private unitRepo = new UnitRepository(),
-        private postingsService = new PostingsService(),
-        private transactionsService = new TransactionService()
+        private unitRepo: UnitRepository,
+        private postingsService: PostingsService,
+        private transactionsService: TransactionService
     ) {
     }
 
@@ -175,5 +175,3 @@ export class UnitService {
         return await this.unitRepo.getAll();
     }
 }
-
-export const unitService = new UnitService();
