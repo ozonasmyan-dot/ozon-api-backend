@@ -4,5 +4,6 @@ import asyncHandler from '@/shared/utils/asyncHandler';
 
 const router = Router();
 router.get('/drr', asyncHandler(analyticsController.getDrr));
+router.get('/buyout', asyncHandler(analyticsController.getBuyout));
 
 export default router;
