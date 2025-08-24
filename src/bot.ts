@@ -1,9 +1,31 @@
 import {Telegraf, Markup, Context} from 'telegraf';
 import {BOT_TOKEN} from '@/config';
-import container from '@/infrastructure/di/container';
 import {AnalyticsService} from '@/modules/analytics/service/service';
 import {DrrProductDto, DrrResponseDto} from '@/modules/analytics/dto/drr.dto';
-import dayjs from 'dayjs'; // или process.env.BOT_TOKEN
+import dayjs from 'dayjs';
+
+import {UnitService} from '@/modules/unit/service/service';
+import {AdvertisingService} from '@/modules/advertising/service/service';
+import container from "@/infrastructure/di/container";
+
+const unitService = container.resolve(UnitService);
+const advertisingService = container.resolve(AdvertisingService);
+const analyticsService = container.resolve(AnalyticsService);
+
+const adsTypes = {
+    'PLACEMENT_TOP_PROMOTION': 'Вывод в топ',
+    'CPO': 'Оплата за заказ',
+    'PLACEMENT_SEARCH_AND_CATEGORY': 'Трафареты',
+} as const;
+
+const productsSku: Record<string, string> = {
+    '2586085325': 'Шапка беж',
+    '2586059276': 'Шапка хаки',
+    '1763835247': 'Шапка черная',
+    '1828048543': 'Сумка черная',
+    '1828048513': 'Сумка серая',
+    '1828048540': 'Сумка бордовая',
+};
 
 if (!BOT_TOKEN) {
     throw new Error('BOT_TOKEN не задан');
@@ -19,21 +41,19 @@ const formatCurrency = (value: number): string =>
 function formatDrrMessage({products, totals}: DrrResponseDto): string {
     let text = '📊 Отчёт по DRR\n\n';
 
-    // по каждому товару
     products.forEach((p: DrrProductDto) => {
-        text += `👜 SKU: ${p.sku}\n`;
+        text += `👜 SKU: ${productsSku[p.sku] ?? p.sku}\n`;
         text += `   • Заказы: ${p.orders.count} шт. на ${formatCurrency(p.orders.money)}\n`;
         text += `   • Реклама: ${formatCurrency(p.ads.totals)}\n`;
 
-        // по типам рекламы
         p.ads.items.forEach((item) => {
-            text += `      - ${item.type}: ${formatCurrency(item.money)}\n`;
+            const label = (adsTypes as any)[item.type] ?? item.type;
+            text += `      - ${label}: ${formatCurrency(item.money)}\n`;
         });
 
         text += `   • DRR: ${p.drr}%\n\n`;
     });
 
-    // блок тоталов
     text += `💡 Итого по всем товарам:\n`;
     text += `   • Заказы: ${totals.orders.count} шт. на ${formatCurrency(totals.orders.money)}\n`;
     text += `   • Реклама: ${formatCurrency(totals.ads.totals)}\n`;
@@ -42,7 +62,47 @@ function formatDrrMessage({products, totals}: DrrResponseDto): string {
     return text;
 }
 
-const analyticsService = container.resolve(AnalyticsService);
+/**
+ * Универсальный помощник: показывает «загрузку», держит typing и редактирует итоги.
+ * @param ctx Telegraf Context
+ * @param work функция, которая должна вернуть текст для отправки
+ * @param loadingText настраиваемый текст загрузки
+ */
+async function withLoading(
+    ctx: Context,
+    work: () => Promise<string>,
+    loadingText = '⏳ Загружаю данные, подождите...'
+): Promise<void> {
+    // Сообщение «загрузка»
+    const loadingMsg = await ctx.reply(loadingText);
+
+    // Периодически отправляем "typing", чтобы пользователь видел активность
+    const typingTimer = setInterval(() => {
+        // безопасно игнорируем ошибки (например, если чат/сообщение недоступно)
+        void ctx.sendChatAction('typing').catch(() => {});
+    }, 4000);
+
+    try {
+        const text = await work();
+
+        await ctx.telegram.editMessageText(
+            ctx.chat!.id,
+            loadingMsg.message_id,
+            undefined,
+            text
+        );
+    } catch (err) {
+        await ctx.telegram.editMessageText(
+            ctx.chat!.id,
+            loadingMsg.message_id,
+            undefined,
+            '⚠️ Произошла ошибка при получении данных'
+        );
+        console.error('[withLoading] Ошибка:', err);
+    } finally {
+        clearInterval(typingTimer);
+    }
+}
 
 const bot = new Telegraf(BOT_TOKEN);
 
@@ -55,25 +115,35 @@ bot.start(async (ctx: Context) => {
 });
 
 bot.hears('📊 Получить DRR сумок', async (ctx: Context) => {
-    const result = await analyticsService.getDrr({
-        date: dayjs().subtract(2, 'day').format('YYYY-MM-DD'),
-        sku: ['1828048543', '1828048513', '1828048540'],
+    await withLoading(ctx, async () => {
+        await Promise.all([
+            unitService.sync(),
+            advertisingService.sync(),
+        ]);
+
+        const result = await analyticsService.getDrr({
+            date: dayjs().format('YYYY-MM-DD'),
+            sku: ['1828048543', '1828048513', '1828048540'],
+        });
+
+        return formatDrrMessage(result);
     });
-
-    const msg = formatDrrMessage(result);
-
-    await ctx.reply(msg);
 });
 
 bot.hears('📊 Получить DRR шапок', async (ctx: Context) => {
-    const result = await analyticsService.getDrr({
-        date: dayjs().format('YYYY-MM-DD'),
-        sku: ['2586085325', '2586059276', '1763835247'],
+    await withLoading(ctx, async () => {
+        await Promise.all([
+            unitService.sync(),
+            advertisingService.sync(),
+        ]);
+
+        const result = await analyticsService.getDrr({
+            date: dayjs().format('YYYY-MM-DD'),
+            sku: ['2586085325', '2586059276', '1763835247'],
+        });
+
+        return formatDrrMessage(result);
     });
-
-    const msg = formatDrrMessage(result);
-
-    await ctx.reply(msg);
 });
 
 bot

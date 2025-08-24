@@ -21,8 +21,8 @@ export class AnalyticsService {
         );
 
         const orders = await this.unitRepo.getUnitsRevenueBySku(
-            dayjs(date).subtract(1, 'day').format('YYYY-MM-DD[T]20:59:59[Z]'),
-            dayjs(date).format('YYYY-MM-DD[T]21:00:00[Z]'),
+            dayjs(date).subtract(1, 'day').format('YYYY-MM-DD[T]21:00:00[Z]'),
+            dayjs(date).format('YYYY-MM-DD[T]20:59:59[Z]'),
         );
 
         const filteredAdsItems = sku.length ? ads.items.filter((i: AdItem) => sku.includes(i.productId)) : ads.items;
