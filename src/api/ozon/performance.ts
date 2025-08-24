@@ -1,4 +1,5 @@
 import axios, {AxiosInstance, InternalAxiosRequestConfig} from 'axios';
+import { PERFORMANCE_CLIENT_ID, PERFORMANCE_CLIENT_SECRET } from '@/config';
 
 // Здесь будем хранить токен и время его жизни
 let performanceToken: string | null = null;
@@ -18,9 +19,9 @@ const refreshPerformanceToken = async (): Promise<string> => {
     const response = await axios.post(
         'https://api-performance.ozon.ru:443/api/client/token',
         {
-            client_id: "74593537-1751562778173@advertising.performance.ozon.ru",
-            client_secret: "67pQaCy8SW5_nbmMElgAcfeCCI5VpqgtlnvjoGXPc7sZykC5R08oSLbLcLBSVpkgAZY1UqkZio81rFjkdw",
-            grant_type: "client_credentials"
+            client_id: PERFORMANCE_CLIENT_ID,
+            client_secret: PERFORMANCE_CLIENT_SECRET,
+            grant_type: 'client_credentials'
         },
         {
             headers: {

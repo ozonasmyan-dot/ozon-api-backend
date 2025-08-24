@@ -3,12 +3,12 @@ import unitRouter from "@/modules/unit/unit.route";
 import advertisingRouter from "@/modules/advertising/advertising.route";
 import analyticsRouter from "@/modules/analytics/analytics.route";
 import cors from "cors";
+import { PORT, CORS_ORIGIN } from '@/config';
 
 const app = express();
-const PORT = 3000;
 
 app.use(cors({
-    origin: "http://localhost:8080",
+    origin: CORS_ORIGIN,
     credentials: true
 }));
 
