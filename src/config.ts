@@ -1,9 +1,11 @@
 import dotenv from 'dotenv';
+import * as process from "node:process";
 
 dotenv.config();
 
 const requireEnv = (name: string): string => {
   const value = process.env[name];
+
   if (!value) {
     throw new Error(`Missing environment variable: ${name}`);
   }
