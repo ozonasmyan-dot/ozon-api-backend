@@ -60,7 +60,8 @@ export class AdvertisingRepository {
     async getAdsAggByProductType(start: string, end: string) {
         const totals = await this.prismaClient.advertising.groupBy({
             by: [
-                "productId"
+                "productId",
+                "type",
             ],
             where: {
                 savedAt: {
@@ -77,6 +78,7 @@ export class AdvertisingRepository {
             items: totals.map(i => ({
                 moneySpent: i._sum.moneySpent,
                 productId: i.productId,
+                type: i.type,
             })),
             totals: totals.reduce((acc: any, item: any) => acc + item._sum.moneySpent, 0),
         }
