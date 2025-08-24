@@ -4,7 +4,7 @@ import {
     fetchCampaignObjects,
     fetchCampaignList,
     fetchCampaignStatistics
-} from "@/infrastructure/clients/modules/advertising";
+} from "@/modules/advertising/repository/advertising";
 import {toNumber} from "@/shared/utils/toNumber";
 import {AdvertisingRepository} from "@/modules/advertising/repository/repository";
 import {generateDatesFrom} from "@/shared/utils/date.utils";
