@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { analyticsController } from '@/modules/analytics/analytics.controller';
+import asyncHandler from '@/utils/asyncHandler';
 
 const router = Router();
-router.get('/drr-by-date', analyticsController.getDrrByDate);
+router.get('/drr-by-date', asyncHandler(analyticsController.getDrrByDate));
 
 export default router;
