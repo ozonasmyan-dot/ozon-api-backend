@@ -1,12 +1,12 @@
-import {Prisma, PrismaClient, UnitNew} from '@prisma/client';
-import {UnitDto} from "@/modules/unit/dto/unit.dto";
+import { Prisma, PrismaClient, UnitNew } from '@prisma/client';
+import { UnitDto } from "@/modules/unit/dto/unit.dto";
+import prisma from "@/prisma";
 
 export class UnitRepository {
-    constructor(private prisma: PrismaClient = new PrismaClient()) {
-    }
+    constructor(private prismaClient: PrismaClient = prisma) {}
 
     async create(data: Omit<UnitDto, 'id'>): Promise<UnitNew> {
-        return this.prisma.unitNew.upsert({
+        return this.prismaClient.unitNew.upsert({
             where: {
                 postingNumber: data.postingNumber
             },
@@ -26,11 +26,11 @@ export class UnitRepository {
     }
 
     async rowsCount(): Promise<number> {
-        return this.prisma.unitNew.count();
+        return this.prismaClient.unitNew.count();
     }
 
     async notDeliveredUnits(): Promise<UnitNew[]> {
-        return this.prisma.unitNew.findMany({
+        return this.prismaClient.unitNew.findMany({
             where: {
                 statusOzon: {
                     notIn: ["cancelled", "delivered"],
@@ -40,7 +40,7 @@ export class UnitRepository {
     }
 
     async updatePostingStatus(status: string, postingNumber: string) {
-        await this.prisma.unitNew.update({
+        await this.prismaClient.unitNew.update({
             where: {
                 postingNumber
             },
@@ -51,7 +51,7 @@ export class UnitRepository {
     }
 
     async lastPostingDate() {
-        const unit = await this.prisma.unitNew.findFirst({
+        const unit = await this.prismaClient.unitNew.findFirst({
             orderBy: {
                 createdAt: "desc"
             },
@@ -61,7 +61,7 @@ export class UnitRepository {
     }
 
     async lastTransactionDate() {
-        const unit = await this.prisma.unitNew.findFirst({
+        const unit = await this.prismaClient.unitNew.findFirst({
             where: {
                 lastOperationDate: {
                     not: null,
@@ -76,7 +76,7 @@ export class UnitRepository {
     }
 
     async getUnitByPostingNumber(postingNumber: string): Promise<UnitNew | null> {
-        return this.prisma.unitNew.findFirst({
+        return this.prismaClient.unitNew.findFirst({
             where: {
                 OR: [
                     {postingNumber: postingNumber},
@@ -87,7 +87,7 @@ export class UnitRepository {
     }
 
     async getAll(): Promise<UnitNew[]> {
-        return this.prisma.unitNew.findMany({
+        return this.prismaClient.unitNew.findMany({
             orderBy: {
                 createdAt: 'desc',
             }
@@ -95,7 +95,7 @@ export class UnitRepository {
     }
 
     async getUnitsRevenueBySku(start: string, end: string) {
-        const orders = await this.prisma.unitNew.groupBy({
+        const orders = await this.prismaClient.unitNew.groupBy({
             by: [
                 "sku",
             ],
