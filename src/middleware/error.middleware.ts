@@ -10,7 +10,7 @@ export default function errorHandler(
 ) {
     logger.error(err);
     if (err instanceof AppError) {
-        return res.status(err.statusCode).json({ error: err.message, details: err.details });
+        res.status(err.statusCode).json({ error: err.message, details: err.details });
     }
     res.status(500).json({ error: err.message || 'Internal Server Error' });
 }
