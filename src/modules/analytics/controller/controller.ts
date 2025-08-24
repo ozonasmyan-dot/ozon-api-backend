@@ -1,15 +1,15 @@
-import { Request, Response } from "express";
+import {Request, Response} from "express";
 import container from '@/infrastructure/di/container';
-import { AnalyticsService } from "@/modules/analytics/service/service";
-import { DrrRequestDto, DrrResponseDto } from "@/modules/analytics/dto/drr.dto";
-import { BuyoutRequestDto, BuyoutMonthDto } from "@/modules/analytics/dto/buyout.dto";
+import {AnalyticsService} from "@/modules/analytics/service/service";
+import {DrrRequestDto, DrrResponseDto} from "@/modules/analytics/dto/drr.dto";
+import {BuyoutRequestDto, BuyoutMonthDto} from "@/modules/analytics/dto/buyout.dto";
 import dayjs from "dayjs";
 
 const analyticsService = container.resolve(AnalyticsService);
 
 export const analyticsController = {
     async getDrr(req: Request, res: Response) {
-        const { date, sku } = req.query;
+        const {date, sku} = req.query;
 
         const query: DrrRequestDto = {
             date: date ? String(date) : dayjs().format('YYYY-MM-DD'),
@@ -18,19 +18,19 @@ export const analyticsController = {
 
         const data: DrrResponseDto = await analyticsService.getDrr(query);
 
-        res.json({ data });
+        res.json({data});
     },
     async getBuyout(req: Request, res: Response) {
-        const { from, to, sku } = req.query;
+        const {from, to, sku} = req.query;
 
         const query: BuyoutRequestDto = {
-            from: String(from),
-            to: String(to),
+            from: from ? String(from) : dayjs().subtract(1, 'month').format('YYYY-MM-DD'),
+            to: to ? String(to) : dayjs().format('YYYY-MM-DD'),
             sku: Array.isArray(sku) ? sku.map(String) : typeof sku === 'string' ? [sku] : [],
         };
 
         const data: BuyoutMonthDto[] = await analyticsService.getBuyout(query);
 
-        res.json({ data });
+        res.json({data});
     },
 };
