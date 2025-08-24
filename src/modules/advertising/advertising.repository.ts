@@ -1,11 +1,11 @@
-import {PrismaClient, Advertising, UnitNew} from "@prisma/client";
+import { PrismaClient, Advertising, UnitNew } from "@prisma/client";
+import prisma from "@/prisma";
 
 export class AdvertisingRepository {
-    constructor(private prisma: PrismaClient = new PrismaClient()) {
-    }
+    constructor(private prismaClient: PrismaClient = prisma) {}
 
     async create(campaign: any, date: string): Promise<Advertising> {
-        return this.prisma.advertising.upsert({
+        return this.prismaClient.advertising.upsert({
             where: {
                 savedAt_campaignId: {
                     savedAt: new Date(date),
@@ -50,7 +50,7 @@ export class AdvertisingRepository {
     }
 
     async lastRow(): Promise<Advertising | null> {
-        return this.prisma.advertising.findFirst({
+        return this.prismaClient.advertising.findFirst({
             orderBy: {
                 savedAt: 'desc',
             },
@@ -58,7 +58,7 @@ export class AdvertisingRepository {
     }
 
     async getAdsAggByProductType(start: string, end: string) {
-        const totals = await this.prisma.advertising.groupBy({
+        const totals = await this.prismaClient.advertising.groupBy({
             by: [
                 "productId"
             ],
