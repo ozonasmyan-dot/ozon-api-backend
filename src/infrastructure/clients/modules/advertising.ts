@@ -1,4 +1,4 @@
-import {performanceClient} from "@/api/ozon/performance";
+import {performanceClient} from "@/infrastructure/clients/ozon/performance";
 import {toNumber} from "@/utils/toNumber";
 
 /**

@@ -1,4 +1,4 @@
-import {sellerClient} from "@/api/ozon/seller";
+import {sellerClient} from "@/infrastructure/clients/ozon/seller";
 import {ApiPostingDto} from "@/modules/posting/dto/api-posting.dto";
 
 export async function postingsFetchItem(postingNumber: string): Promise<ApiPostingDto> {

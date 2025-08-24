@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient, UnitNew } from '@prisma/client';
 import { UnitDto } from "@/modules/unit/dto/unit.dto";
-import prisma from "@/prisma";
+import prisma from "@/infrastructure/database/prismaClient";
 
 export class UnitRepository {
     constructor(private prismaClient: PrismaClient = prisma) {}

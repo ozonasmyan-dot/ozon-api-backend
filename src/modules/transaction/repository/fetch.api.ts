@@ -1,4 +1,4 @@
-import {sellerClient} from "@/api/ozon/seller";
+import {sellerClient} from "@/infrastructure/clients/ozon/seller";
 import {ApiTransactionDto} from '@/modules/transaction/dto/api-transaction.dto';
 
 export interface FilterParams {

@@ -1,5 +1,5 @@
 import { PrismaClient, Advertising, UnitNew } from "@prisma/client";
-import prisma from "@/prisma";
+import prisma from "@/infrastructure/database/prismaClient";
 
 export class AdvertisingRepository {
     constructor(private prismaClient: PrismaClient = prisma) {}
