@@ -123,7 +123,6 @@ export class AdvertisingService {
 
 
             const rows = products?.['12950100']?.report?.rows ?? [];
-            // console.log(rows);
             return rows as any[];
         } catch (error: any) {
             const status = error?.response?.status;

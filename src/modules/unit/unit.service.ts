@@ -98,7 +98,6 @@ export class UnitService {
     }
 
     async saveNewUnits(): Promise<void> {
-        console.log('123xx');
         const lastDate = await this.unitRepo.lastPostingDate();
 
         const postings = await this.postingsService.get({
