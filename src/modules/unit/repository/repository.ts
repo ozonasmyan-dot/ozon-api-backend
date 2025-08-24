@@ -137,4 +137,25 @@ export class UnitRepository {
             totals,
         };
     }
+    async getStatusCountsBySku(start: string, end: string): Promise<{ createdAt: Date; sku: string; status: string }[]> {
+        const units = await this.prismaClient.unitNew.findMany({
+            where: {
+                createdAt: {
+                    gte: start,
+                    lte: end,
+                },
+            },
+            select: {
+                createdAt: true,
+                sku: true,
+                statusOzon: true,
+            },
+        });
+
+        return units.map((u) => ({
+            createdAt: u.createdAt,
+            sku: u.sku,
+            status: u.statusOzon,
+        }));
+    }
 }

@@ -3,6 +3,7 @@ import {UnitRepository} from '@/modules/unit/repository/repository';
 import {AdvertisingRepository} from '@/modules/advertising/repository/repository';
 import {DrrRequestDto, DrrResponseDto} from "@/modules/analytics/dto/drr.dto";
 import {AdItem, OrderItem} from "@/modules/analytics/dto/items.dto";
+import {BuyoutRequestDto, BuyoutItemDto, BuyoutMonthDto} from "@/modules/analytics/dto/buyout.dto";
 
 export class AnalyticsService {
     constructor(
@@ -86,5 +87,45 @@ export class AnalyticsService {
             products,
             totals,
         };
+    }
+
+    async getBuyout({ from, to, sku }: BuyoutRequestDto): Promise<BuyoutMonthDto[]> {
+        logger.info({from, to, sku}, 'Получение выкупа');
+        const units = await this.unitRepo.getStatusCountsBySku(
+            dayjs(from).format('YYYY-MM-DD[T]00:00:00[Z]'),
+            dayjs(to).format('YYYY-MM-DD[T]23:59:59[Z]'),
+        );
+
+        const filtered = sku.length ? units.filter((u) => sku.includes(u.sku)) : units;
+
+        const grouped = new Map<string, Map<string, { statuses: Record<string, number>; total: number }>>();
+
+        filtered.forEach((u) => {
+            const month = dayjs(u.createdAt).format('YYYY-MM');
+            if (!grouped.has(month)) {
+                grouped.set(month, new Map());
+            }
+            const skuMap = grouped.get(month)!;
+            if (!skuMap.has(u.sku)) {
+                skuMap.set(u.sku, { statuses: {}, total: 0 });
+            }
+            const data = skuMap.get(u.sku)!;
+            data.statuses[u.status] = (data.statuses[u.status] || 0) + 1;
+            data.total += 1;
+        });
+
+        const result: BuyoutMonthDto[] = [];
+
+        grouped.forEach((skuMap, month) => {
+            const items: BuyoutItemDto[] = [];
+            skuMap.forEach((data, id) => {
+                const delivered = data.statuses['delivered'] || 0;
+                const buyout = data.total ? delivered / data.total : 0;
+                items.push({ sku: id, statuses: data.statuses, buyout });
+            });
+            result.push({ month, items });
+        });
+
+        return result;
     }
 }
