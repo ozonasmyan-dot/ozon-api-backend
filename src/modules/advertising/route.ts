@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { advertisingController } from '@/modules/advertising/advertising.controller';
+import { advertisingController } from '@/modules/advertising/controller/controller';
 import asyncHandler from '@/utils/asyncHandler';
 
 const router = Router();

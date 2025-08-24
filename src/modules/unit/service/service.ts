@@ -1,11 +1,11 @@
 import dayjs from "dayjs";
 import minMax from "dayjs/plugin/minMax";
-import {PostingsService} from "@/modules/posting/posting.service";
-import {TransactionService} from "@/modules/transaction/transaction.service";
+import {PostingsService} from "@/modules/posting/service/service";
+import {TransactionService} from "@/modules/transaction/service/service";
 import {UnitDto} from "@/modules/unit/dto/unit.dto";
 import {economy} from "@/modules/unit/utils/economy.utils";
 import {TransactionDto} from "@/modules/transaction/dto/transaction.dto";
-import {UnitRepository} from "@/modules/unit/unit.repository";
+import {UnitRepository} from "@/modules/unit/repository/repository";
 import {PostingDto} from "@/modules/posting/dto/posting.dto";
 
 dayjs.extend(minMax);

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { unitService } from "./unit.service";
+import { unitService } from "@/modules/unit/service/service";
 import { AppError } from "@/errors/AppError";
 
 export const unitController = {

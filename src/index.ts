@@ -1,7 +1,7 @@
 import express from 'express';
-import unitRouter from "@/modules/unit/unit.route";
-import advertisingRouter from "@/modules/advertising/advertising.route";
-import analyticsRouter from "@/modules/analytics/analytics.route";
+import unitRouter from "@/modules/unit/route";
+import advertisingRouter from "@/modules/advertising/route";
+import analyticsRouter from "@/modules/analytics/route";
 import cors from "cors";
 import { PORT, CORS_ORIGIN } from '@/config';
 import errorHandler from "@/middleware/error.middleware";

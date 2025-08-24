@@ -1,5 +1,5 @@
 import {Request, Response} from "express";
-import {analyticsService} from "@/modules/analytics/analytics.service";
+import {analyticsService} from "@/modules/analytics/service/service";
 
 export const analyticsController = {
     async getDrrByDate(req: Request, res: Response) {
