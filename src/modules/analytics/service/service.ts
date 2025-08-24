@@ -133,6 +133,7 @@ export class AnalyticsService {
 
     async getMargin({ from, to, sku }: MarginRequestDto): Promise<MarginMonthDto[]> {
         logger.info({from, to, sku}, 'Получение маржи');
+
         const units = await this.unitRepo.getEconomyBySku(
             dayjs(from).format('YYYY-MM-DD[T]00:00:00[Z]'),
             dayjs(to).format('YYYY-MM-DD[T]23:59:59[Z]'),
@@ -140,7 +141,7 @@ export class AnalyticsService {
 
         const filtered = sku.length ? units.filter((u) => sku.includes(u.sku)) : units;
 
-        const grouped = new Map<string, Map<string, { statuses: Record<string, number>; totalServices: number; totalCostPrice: number; margin: number }>>();
+        const grouped = new Map<string, Map<string, { statuses: Record<string, number>; totalServices: number; totalCostPrice: number; margin: number; adSpend: number }>>();
 
         filtered.forEach((u) => {
             const month = dayjs(u.createdAt).format('YYYY-MM');
@@ -149,10 +150,10 @@ export class AnalyticsService {
             }
             const skuMap = grouped.get(month)!;
             if (!skuMap.has(u.sku)) {
-                skuMap.set(u.sku, { statuses: {}, totalServices: 0, totalCostPrice: 0, margin: 0 });
+                skuMap.set(u.sku, { statuses: {}, totalServices: 0, totalCostPrice: 0, margin: 0, adSpend: 0 });
             }
             const data = skuMap.get(u.sku)!;
-            data.statuses[u.statusOzon] = (data.statuses[u.statusOzon] || 0) + 1;
+            data.statuses[u.status] = (data.statuses[u.status] || 0) + 1;
             data.totalServices += u.totalServices;
             data.totalCostPrice += u.costPrice;
             data.margin += u.margin;
@@ -174,6 +175,7 @@ export class AnalyticsService {
             skuMap.forEach((data, id) => {
                 const spend = adMap.get(id) || 0;
                 data.margin -= spend;
+                data.adSpend = spend;
             });
         }));
 
@@ -181,6 +183,7 @@ export class AnalyticsService {
 
         grouped.forEach((skuMap, month) => {
             const items: MarginItemDto[] = [];
+            const totals = { totalServices: 0, totalCostPrice: 0, adSpend: 0, margin: 0, statuses: {} as Record<string, number> };
             skuMap.forEach((data, id) => {
                 items.push({
                     sku: id,
@@ -188,9 +191,18 @@ export class AnalyticsService {
                     totalServices: data.totalServices,
                     totalCostPrice: data.totalCostPrice,
                     margin: data.margin,
+                    adSpend: data.adSpend,
                 });
+
+                Object.entries(data.statuses).forEach(([status, count]) => {
+                    totals.statuses[status] = (totals.statuses[status] || 0) + count;
+                });
+                totals.totalServices += data.totalServices;
+                totals.totalCostPrice += data.totalCostPrice;
+                totals.adSpend += data.adSpend;
+                totals.margin += data.margin;
             });
-            result.push({ month, items });
+            result.push({ month, items, totals });
         });
 
         return result;

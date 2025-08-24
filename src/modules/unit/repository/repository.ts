@@ -159,7 +159,7 @@ export class UnitRepository {
         }));
     }
 
-    async getEconomyBySku(start: string, end: string): Promise<{ createdAt: Date; sku: string; statusOzon: string; margin: number; costPrice: number; totalServices: number }[]> {
+    async getEconomyBySku(start: string, end: string): Promise<{ createdAt: Date; sku: string; status: string; margin: number; costPrice: number; totalServices: number }[]> {
         const units = await this.prismaClient.unitNew.findMany({
             where: {
                 createdAt: {
@@ -170,7 +170,7 @@ export class UnitRepository {
             select: {
                 createdAt: true,
                 sku: true,
-                statusOzon: true,
+                status: true,
                 margin: true,
                 costPrice: true,
                 totalServices: true,
@@ -180,7 +180,7 @@ export class UnitRepository {
         return units.map((u) => ({
             createdAt: u.createdAt,
             sku: u.sku,
-            statusOzon: u.statusOzon,
+            status: u.status,
             margin: Number(u.margin),
             costPrice: Number(u.costPrice),
             totalServices: Number(u.totalServices),

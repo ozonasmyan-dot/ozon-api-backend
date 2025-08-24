@@ -9,10 +9,19 @@ export interface MarginItemDto {
     statuses: Record<string, number>;
     totalServices: number;
     totalCostPrice: number;
+    adSpend: number;
+    margin: number;
+}
+
+export interface MarginTotalsDto {
+    totalServices: number;
+    totalCostPrice: number;
+    adSpend: number;
     margin: number;
 }
 
 export interface MarginMonthDto {
     month: string;
     items: MarginItemDto[];
+    totals: MarginTotalsDto;
 }
