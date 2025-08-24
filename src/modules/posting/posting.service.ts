@@ -1,12 +1,13 @@
-import {postingsFetch} from "@/modules/posting/api/fetch.api";
-import {postingsFetchItem} from "@/modules/posting/api/fetch-item.api";
-import {PostingDto} from "@/modules/posting/dto/posting.dto";
+import { postingsFetch } from "@/modules/posting/api/fetch.api";
+import { postingsFetchItem } from "@/modules/posting/api/fetch-item.api";
+import { PostingDto } from "@/modules/posting/dto/posting.dto";
 import decimal from "decimal.js";
-import {ApiPostingDto} from "@/modules/posting/dto/api-posting.dto";
+import { ApiPostingDto } from "@/modules/posting/dto/api-posting.dto";
+import { AppError } from "@/errors/AppError";
 
 export class PostingsService {
     async get(
-        {since, to}:
+        { since, to }:
         { since: string | Date, to: string | Date }
     ): Promise<PostingDto[]> {
         let postingsList: PostingDto[] = [];
@@ -48,45 +49,45 @@ export class PostingsService {
                 });
             }
         } catch (error) {
-            return [];
+            throw new AppError('Failed to fetch postings', 502, error);
         }
 
         return postingsList ?? [];
     }
 
     async getItemByPostingNumber(postingNumber: string): Promise<PostingDto> {
-        const postingApi: ApiPostingDto = await postingsFetchItem(postingNumber);
+        const postingApi: ApiPostingDto | null = await postingsFetchItem(postingNumber);
 
-        let posting: Partial<PostingDto> = {};
-
-        if (postingApi) {
-            posting = {
-                product: postingApi?.products?.[0]?.offer_id,
-
-                orderId: String(postingApi?.order_id ?? ""),
-                orderNumber: postingApi?.order_number,
-                postingNumber: postingApi?.posting_number,
-                statusOzon: postingApi?.status,
-                createdAt: postingApi?.created_at,
-                inProcessAt: postingApi?.in_process_at,
-
-                deliveryType: postingApi?.analytics_data?.delivery_type,
-                city: postingApi?.analytics_data?.city,
-                isPremium: postingApi?.analytics_data?.is_premium,
-                paymentTypeGroupName: postingApi?.analytics_data?.payment_type_group_name,
-                warehouseId: String(postingApi?.analytics_data?.warehouse_id ?? ""),
-                warehouseName: postingApi?.analytics_data?.warehouse_name,
-
-                sku: String(postingApi?.products?.[0]?.sku ?? ""),
-
-                oldPrice: decimal(postingApi?.financial_data?.products?.[0]?.old_price ?? 0).toNumber(),
-                price: decimal(postingApi?.financial_data?.products?.[0]?.price ?? 0).toNumber(),
-                currencyCode: postingApi?.financial_data?.products?.[0]?.currency_code,
-
-                clusterFrom: postingApi?.financial_data?.cluster_from,
-                clusterTo: postingApi?.financial_data?.cluster_to,
-            }
+        if (!postingApi) {
+            throw new AppError('Posting not found', 404);
         }
+
+        const posting: Partial<PostingDto> = {
+            product: postingApi?.products?.[0]?.offer_id,
+
+            orderId: String(postingApi?.order_id ?? ""),
+            orderNumber: postingApi?.order_number,
+            postingNumber: postingApi?.posting_number,
+            statusOzon: postingApi?.status,
+            createdAt: postingApi?.created_at,
+            inProcessAt: postingApi?.in_process_at,
+
+            deliveryType: postingApi?.analytics_data?.delivery_type,
+            city: postingApi?.analytics_data?.city,
+            isPremium: postingApi?.analytics_data?.is_premium,
+            paymentTypeGroupName: postingApi?.analytics_data?.payment_type_group_name,
+            warehouseId: String(postingApi?.analytics_data?.warehouse_id ?? ""),
+            warehouseName: postingApi?.analytics_data?.warehouse_name,
+
+            sku: String(postingApi?.products?.[0]?.sku ?? ""),
+
+            oldPrice: decimal(postingApi?.financial_data?.products?.[0]?.old_price ?? 0).toNumber(),
+            price: decimal(postingApi?.financial_data?.products?.[0]?.price ?? 0).toNumber(),
+            currencyCode: postingApi?.financial_data?.products?.[0]?.currency_code,
+
+            clusterFrom: postingApi?.financial_data?.cluster_from,
+            clusterTo: postingApi?.financial_data?.cluster_to,
+        };
 
         return posting as PostingDto;
     }
