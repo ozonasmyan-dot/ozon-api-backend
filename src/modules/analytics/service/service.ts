@@ -1,8 +1,8 @@
 import dayjs from "dayjs";
-import { UnitRepository } from '@/modules/unit/repository/repository';
-import { AdvertisingRepository } from '@/modules/advertising/repository/repository';
-import { logger } from '@/shared/logger';
-import { DrrRequestDto, DrrResponseDto } from "@/modules/analytics/dto/drr.dto";
+import {UnitRepository} from '@/modules/unit/repository/repository';
+import {AdvertisingRepository} from '@/modules/advertising/repository/repository';
+import {logger} from '@/shared/logger';
+import {DrrRequestDto, DrrResponseDto} from "@/modules/analytics/dto/drr.dto";
 
 export class AnalyticsService {
     constructor(
@@ -11,8 +11,8 @@ export class AnalyticsService {
     ) {
     }
 
-    async getDrrByDate(date: string) {
-        logger.info({ date }, 'Получение DRR по дате');
+    async getDrr({date, sku}: DrrRequestDto): Promise<DrrResponseDto> {
+        logger.info({date, sku}, 'Получение DRR');
 
         const ads = await this.adsRepo.getAdsAggByProductType(
             dayjs(date).format('YYYY-MM-DD[T]00:00:00[Z]'),
@@ -22,25 +22,6 @@ export class AnalyticsService {
         const orders = await this.unitRepo.getUnitsRevenueBySku(
             dayjs(date).subtract(1, 'day').format('YYYY-MM-DD[T]20:59:59[Z]'),
             dayjs(date).format('YYYY-MM-DD[T]21:00:00[Z]'),
-        );
-
-        return {
-            orders,
-            ads,
-        }
-    }
-
-    async getDrr({ dateFrom, dateTo, sku }: DrrRequestDto): Promise<DrrResponseDto> {
-        logger.info({ dateFrom, dateTo, sku }, 'Получение DRR');
-
-        const ads = await this.adsRepo.getAdsAggByProductType(
-            dayjs(dateFrom).format('YYYY-MM-DD[T]00:00:00[Z]'),
-            dayjs(dateTo).format('YYYY-MM-DD[T]23:59:59[Z]'),
-        );
-
-        const orders = await this.unitRepo.getUnitsRevenueBySku(
-            dayjs(dateFrom).subtract(1, 'day').format('YYYY-MM-DD[T]20:59:59[Z]'),
-            dayjs(dateTo).format('YYYY-MM-DD[T]21:00:00[Z]'),
         );
 
         const filteredAdsItems = sku.length ? ads.items.filter((i: any) => sku.includes(i.productId)) : ads.items;
@@ -92,8 +73,8 @@ export class AnalyticsService {
                 return acc;
             },
             {
-                orders: { sum: 0, count: 0 },
-                ads: { cpo: 0, other: 0, total: 0 },
+                orders: {sum: 0, count: 0},
+                ads: {cpo: 0, other: 0, total: 0},
                 drr: 0,
             }
         );

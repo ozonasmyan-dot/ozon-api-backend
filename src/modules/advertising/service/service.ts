@@ -1,4 +1,4 @@
-import { logger } from '@/shared/logger';
+import {logger} from '@/shared/logger';
 import {
     fetchDailyCampaignStatistics,
     fetchCampaignObjects,
@@ -58,7 +58,7 @@ export class AdvertisingService {
                 costPerCart: safeDivide(safeToNumber(campaign.moneySpent), safeNumber(campaign.toCart)),
             };
         } catch (error) {
-            logger.error({ err: error }, '❌ Ошибка в buildCompany');
+            logger.error({err: error}, '❌ Ошибка в buildCompany');
             return null;
         }
     };
@@ -103,7 +103,7 @@ export class AdvertisingService {
 
                 logger.info(`✅ Кампания ${campaign.id} успешно загружена`);
             } catch (error) {
-                logger.error({ err: error, campaignId: campaign.id }, '⚠️ Ошибка при загрузке кампании');
+                logger.error({err: error, campaignId: campaign.id}, '⚠️ Ошибка при загрузке кампании');
             }
         }
 
@@ -129,7 +129,7 @@ export class AdvertisingService {
             const url = error?.config?.url;
             const message = error?.response?.data?.message || error?.message || 'Неизвестная ошибка';
 
-            logger.error({ err: error, status, url }, `❌ Ошибка запроса: ${message}`);
+            logger.error({err: error, status, url}, `❌ Ошибка запроса: ${message}`);
         }
     };
 

@@ -1,8 +1,9 @@
-import { PrismaClient, Advertising, UnitNew } from "@prisma/client";
+import {PrismaClient, Advertising} from "@prisma/client";
 import prisma from "@/infrastructure/database/prismaClient";
 
 export class AdvertisingRepository {
-    constructor(private prismaClient: PrismaClient = prisma) {}
+    constructor(private prismaClient: PrismaClient = prisma) {
+    }
 
     async create(campaign: any, date: string): Promise<Advertising> {
         return this.prismaClient.advertising.upsert({
@@ -58,6 +59,8 @@ export class AdvertisingRepository {
     }
 
     async getAdsAggByProductType(start: string, end: string) {
+        console.log(start, end, 'asdasd');
+
         const totals = await this.prismaClient.advertising.groupBy({
             by: [
                 "productId",

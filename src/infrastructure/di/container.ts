@@ -1,32 +1,34 @@
-import { sellerClient } from '@/infrastructure/clients/ozon/seller';
-import { performanceClient } from '@/infrastructure/clients/ozon/performance';
-import { AdvertisingRepository } from '@/modules/advertising/repository/repository';
-import { AdvertisingService } from '@/modules/advertising/service/service';
-import { AnalyticsService } from '@/modules/analytics/service/service';
-import { UnitRepository } from '@/modules/unit/repository/repository';
-import { PostingsService } from '@/modules/posting/service/service';
-import { TransactionService } from '@/modules/transaction/service/service';
-import { UnitService } from '@/modules/unit/service/service';
+import {sellerClient} from '@/infrastructure/clients/ozon/seller';
+import {performanceClient} from '@/infrastructure/clients/ozon/performance';
+import {AdvertisingRepository} from '@/modules/advertising/repository/repository';
+import {AdvertisingService} from '@/modules/advertising/service/service';
+import {AnalyticsService} from '@/modules/analytics/service/service';
+import {UnitRepository} from '@/modules/unit/repository/repository';
+import {PostingsService} from '@/modules/posting/service/service';
+import {TransactionService} from '@/modules/transaction/service/service';
+import {UnitService} from '@/modules/unit/service/service';
+
+type Token<T> = string | symbol | { new(...args: any[]): T };
 
 // Simple dependency injection container
 class Container {
-  private providers = new Map<any, () => any>();
-  private singletons = new Map<any, any>();
+    private providers = new Map<Token<any>, () => any>();
+    private singletons = new Map<Token<any>, any>();
 
-  register<T>(token: any, provider: () => T): void {
-    this.providers.set(token, provider);
-  }
-
-  resolve<T>(token: any): T {
-    if (!this.singletons.has(token)) {
-      const provider = this.providers.get(token);
-      if (!provider) {
-        throw new Error(`No provider for token ${String(token)}`);
-      }
-      this.singletons.set(token, provider());
+    register<T>(token: Token<T>, provider: () => T): void {
+        this.providers.set(token, provider);
     }
-    return this.singletons.get(token);
-  }
+
+    resolve<T>(token: Token<T>): T {
+        if (!this.singletons.has(token)) {
+            const provider = this.providers.get(token);
+            if (!provider) {
+                throw new Error(`No provider for token ${String(token)}`);
+            }
+            this.singletons.set(token, provider());
+        }
+        return this.singletons.get(token) as T;
+    }
 }
 
 export const container = new Container();
@@ -41,21 +43,21 @@ container.register(UnitRepository, () => new UnitRepository());
 
 // Services
 container.register(AdvertisingService, () => new AdvertisingService(
-  container.resolve(AdvertisingRepository),
+    container.resolve(AdvertisingRepository),
 ));
 
 container.register(PostingsService, () => new PostingsService());
 container.register(TransactionService, () => new TransactionService());
 
 container.register(UnitService, () => new UnitService(
-  container.resolve(UnitRepository),
-  container.resolve(PostingsService),
-  container.resolve(TransactionService),
+    container.resolve(UnitRepository),
+    container.resolve(PostingsService),
+    container.resolve(TransactionService),
 ));
 
 container.register(AnalyticsService, () => new AnalyticsService(
-  container.resolve(UnitRepository),
-  container.resolve(AdvertisingRepository),
+    container.resolve(UnitRepository),
+    container.resolve(AdvertisingRepository),
 ));
 
 export default container;
