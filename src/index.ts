@@ -1,3 +1,4 @@
+import 'module-alias/register';
 import express from 'express';
 import '@/infrastructure/di/container';
 import unitRouter from "@/modules/unit/route";
