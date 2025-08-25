@@ -107,11 +107,28 @@ async function withLoading(
 const bot = new Telegraf(BOT_TOKEN);
 
 const mainKb = Markup.keyboard([
-    ['📊 Получить DRR сумок', '📊 Получить DRR шапок']
+    ['📊 Получить DRR сумок'],
+    ['📊 Получить DRR шапок'],
+    ['📊 Получить DRR общий']
 ]).resize();
 
 bot.start(async (ctx: Context) => {
     await ctx.reply('Привет! Нажми нужную кнопку ниже:', mainKb);
+});
+
+bot.hears('📊 Получить DRR общий', async (ctx: Context) => {
+    await withLoading(ctx, async () => {
+        await Promise.all([
+            unitService.sync(),
+            advertisingService.sync(),
+        ]);
+
+        const result = await analyticsService.getDrr({
+            date: dayjs().format('YYYY-MM-DD')
+        });
+
+        return formatDrrMessage(result);
+    });
 });
 
 bot.hears('📊 Получить DRR сумок', async (ctx: Context) => {

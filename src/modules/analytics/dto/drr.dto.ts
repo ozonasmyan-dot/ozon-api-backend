@@ -1,6 +1,6 @@
 export interface DrrRequestDto {
     date: string
-    sku: string[];
+    sku?: string[];
 }
 export interface DrrProductDto {
     sku: string;

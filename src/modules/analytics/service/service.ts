@@ -14,7 +14,7 @@ export class AnalyticsService {
     ) {
     }
 
-    async getDrr({date, sku}: DrrRequestDto): Promise<DrrResponseDto> {
+    async getDrr({date, sku = []}: DrrRequestDto): Promise<DrrResponseDto> {
         const ads = await this.adsRepo.getAdsAggByProductType(
             dayjs(date).format('YYYY-MM-DD[T]00:00:00[Z]'),
             dayjs(date).format('YYYY-MM-DD[T]23:59:59[Z]'),
