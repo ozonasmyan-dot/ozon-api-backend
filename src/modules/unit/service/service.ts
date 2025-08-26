@@ -19,28 +19,42 @@ export class UnitService {
     ) {
     }
 
-    async createUnitItem(posting: PostingDto, transactions: TransactionDto[] = []) {
-        const latestDayjs = dayjs.max(transactions.map(x => dayjs(x.operationDate)));
+    async createUnitItem(posting: PostingDto, transactions?: TransactionDto[]): Promise<UnitDto>;
+    async createUnitItem(unit: UnitDto, transactions?: TransactionDto[]): Promise<UnitDto>;
+    async createUnitItem(
+        item: PostingDto | UnitDto,
+        transactions: TransactionDto[] = [],
+    ): Promise<UnitDto> {
+        const latestDayjs = transactions.length
+            ? dayjs.max(transactions.map(x => dayjs(x.operationDate)))
+            : null;
 
-        const unit: UnitDto = {
-            ...posting,
-            status: posting.statusOzon,
-            margin: 0,
-            totalServices: 0,
-            costPrice: 0,
-            lastOperationDate: latestDayjs ? latestDayjs.toDate() : null,
-            services: [],
-        };
+        const unit: UnitDto = 'status' in item
+            ? { ...item, services: [...item.services] }
+            : {
+                ...item,
+                status: item.statusOzon,
+                margin: 0,
+                totalServices: 0,
+                costPrice: 0,
+                lastOperationDate: null,
+                services: [],
+            };
+
+        if (latestDayjs) {
+            unit.lastOperationDate = unit.lastOperationDate
+                ? dayjs.max(dayjs(unit.lastOperationDate), latestDayjs).toDate()
+                : latestDayjs.toDate();
+        }
 
         const services = transactions.flatMap(t => t?.services ?? []);
-
         unit.services.push(...services);
 
         for (const tx of transactions) {
             if (tx.saleCommission) {
                 unit.services.push({
                     name: "SalesCommission",
-                    price: tx.saleCommission
+                    price: tx.saleCommission,
                 });
             }
         }
@@ -58,7 +72,7 @@ export class UnitService {
             totalServices,
             costPrice,
             margin,
-        }
+        };
     }
 
     async firstSync() {
@@ -145,9 +159,13 @@ export class UnitService {
 
                 if (!unit) return null;
 
+                const unitDto: UnitDto = {
+                    ...(unit as unknown as UnitDto),
+                    services: ((unit as any).services ?? []) as { name: string; price: number }[],
+                };
+
                 return await this.createUnitItem(
-                    // @ts-ignore
-                    unit,
+                    unitDto,
                     [transaction]
                 );
             })
