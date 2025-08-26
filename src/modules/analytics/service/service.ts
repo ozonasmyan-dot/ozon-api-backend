@@ -123,7 +123,7 @@ export class AnalyticsService {
             skuMap.forEach((data, id) => {
                 const delivered = data.statuses['Доставлен'] || 0;
                 const buyout = Math.floor((data.total ? delivered / data.total : 0) * 100);
-                items.push({ sku: id, statuses: data.statuses, buyout });
+                items.push({ sku: id, statuses: data.statuses, total: data.total, buyout });
             });
             result.push({ month, items });
         });
