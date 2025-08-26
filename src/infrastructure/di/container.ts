@@ -12,8 +12,8 @@ type Token<T> = string | symbol | { new(...args: any[]): T };
 
 // Simple dependency injection container
 class Container {
-    private providers = new Map<Token<any>, () => any>();
-    private singletons = new Map<Token<any>, any>();
+    private providers = new Map<Token<unknown>, () => unknown>();
+    private singletons = new Map<Token<unknown>, unknown>();
 
     register<T>(token: Token<T>, provider: () => T): void {
         this.providers.set(token, provider);
@@ -21,7 +21,7 @@ class Container {
 
     resolve<T>(token: Token<T>): T {
         if (!this.singletons.has(token)) {
-            const provider = this.providers.get(token);
+            const provider = this.providers.get(token) as (() => T) | undefined;
             if (!provider) {
                 throw new Error(`No provider for token ${String(token)}`);
             }
