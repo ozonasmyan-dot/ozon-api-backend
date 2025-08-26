@@ -69,4 +69,22 @@ export class AdvertisingHourlyRepository {
             orderBy: {updatedAt: 'desc'},
         });
     }
+
+    async getByDate(date: string): Promise<AdvertisingHourly[]> {
+        const start = dayjs.tz(date, "Asia/Yerevan").startOf('day');
+        const end = dayjs.tz(date, "Asia/Yerevan").endOf('day');
+
+        const from = dayjs.utc(start.format("YYYY-MM-DDTHH:mm:ss.SSS"));
+        const to = dayjs.utc(end.format("YYYY-MM-DDTHH:mm:ss.SSS"));
+
+        return this.prismaClient.advertisingHourly.findMany({
+            where: {
+                updatedAt: {
+                    gte: from.toDate(),
+                    lte: to.toDate(),
+                },
+            },
+            orderBy: {updatedAt: 'desc'},
+        });
+    }
 }
