@@ -21,4 +21,8 @@ export class AdvertisingHourlyService {
     async getAll() {
         return this.hourlyRepo.getAll();
     }
+
+    async getByDate(date: string) {
+        return this.hourlyRepo.getByDate(date);
+    }
 }
