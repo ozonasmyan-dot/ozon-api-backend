@@ -1,5 +1,4 @@
-import { fetch } from '@/modules/transaction/repository/fetch.api';
-import { FilterParams } from '@/modules/transaction/repository/fetch.api';
+import { fetchTransactions, FilterParams } from '@/modules/transaction/repository/fetch.api';
 import { TransactionDto } from '@/modules/transaction/dto/transaction.dto';
 import { logger } from '@/shared/logger';
 
@@ -9,7 +8,7 @@ export class TransactionService {
 
         let transactions: TransactionDto[] = [];
 
-        const transactionsQuery = await fetch({
+        const transactionsQuery = await fetchTransactions({
             ...params,
         });
 
