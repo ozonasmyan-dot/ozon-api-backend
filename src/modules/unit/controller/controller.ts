@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import container from '@/infrastructure/di/container';
 import { UnitService } from "@/modules/unit/service/service";
 import { AppError } from "@/shared/types/AppError";
+import { toCsv } from "@/shared/utils/csv.utils";
 
 const unitService = container.resolve(UnitService);
 
@@ -24,5 +25,15 @@ export const unitController = {
         }
 
         res.json(data);
+    },
+
+    async importData(req: Request, res: Response): Promise<void> {
+        const data = await unitService.getAll();
+        if (data.length === 0) {
+            throw new AppError<undefined>('Units not found', 404);
+        }
+
+        const csv = toCsv(data as any[]);
+        res.header('Content-Type', 'text/csv').send(csv);
     },
 };

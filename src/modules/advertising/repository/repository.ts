@@ -59,6 +59,14 @@ export class AdvertisingRepository {
         });
     }
 
+    async getAll(): Promise<Advertising[]> {
+        return this.prismaClient.advertising.findMany({
+            orderBy: {
+                savedAt: 'desc',
+            },
+        });
+    }
+
     async getAdsAggByProductType(start: string, end: string): Promise<{ items: AdItem[]; totals: number }> {
         const totals = await this.prismaClient.advertising.groupBy({
             by: [
