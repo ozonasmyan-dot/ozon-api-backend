@@ -75,6 +75,14 @@ export class UnitService {
         };
     }
 
+    /**
+     * Performs the initial synchronization by fetching postings and their related
+     * transactions to build unit entities.
+     *
+     * @returns {Promise<UnitDto[]>} Array of newly created unit items.
+     * @remarks Side effects: Reads data from posting and transaction services
+     * and writes log messages.
+     */
     async firstSync() {
         logger.info('Starting initial unit synchronization');
 
@@ -114,6 +122,13 @@ export class UnitService {
         );
     }
 
+    /**
+     * Saves units for postings that have not yet been stored.
+     *
+     * @returns {Promise<void>} Resolves when new units are persisted.
+     * @remarks Side effects: Fetches postings from an external service,
+     * persists units in the repository, and writes log messages.
+     */
     async saveNewUnits(): Promise<void> {
         const lastDate = await this.unitRepo.lastPostingDate();
 
@@ -148,6 +163,14 @@ export class UnitService {
         });
     }
 
+    /**
+     * Merges new transactions with existing units and stores the updated
+     * unit data.
+     *
+     * @returns {Promise<void>} Resolves after combined units are saved.
+     * @remarks Side effects: Fetches transactions, queries and updates the
+     * repository, and writes log messages.
+     */
     async combinePostingsAndTransactions() {
         logger.info('Combining postings and transactions');
 
@@ -180,6 +203,14 @@ export class UnitService {
         }
     }
 
+    /**
+     * Orchestrates full unit synchronization including initial sync,
+     * status updates, saving new units, and transaction merging.
+     *
+     * @returns {Promise<void>} Resolves when synchronization completes.
+     * @remarks Side effects: Interacts with the repository and external
+     * services and writes log messages.
+     */
     async sync() {
         const emptyUnits = (await this.unitRepo.rowsCount()) === 0;
 
@@ -198,6 +229,12 @@ export class UnitService {
         await this.combinePostingsAndTransactions();
     }
 
+    /**
+     * Retrieves all units from the repository.
+     *
+     * @returns {Promise<UnitDto[]>} Array of units ordered by creation date.
+     * @remarks Side effects: Reads data from the unit repository.
+     */
     async getAll() {
         return await this.unitRepo.getAll();
     }
