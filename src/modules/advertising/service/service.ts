@@ -5,11 +5,15 @@ import {
     fetchCampaignList,
     fetchCampaignStatistics
 } from "@/modules/advertising/repository/advertising";
-import {toNumber} from "@/shared/utils/toNumber";
 import {AdvertisingRepository} from "@/modules/advertising/repository/repository";
 import {generateDatesFrom} from "@/shared/utils/date.utils";
 import {fetchApiReportData} from "@/infrastructure/clients/utils/report";
 import {get62DayRanges} from '@/shared/utils/date.utils';
+import decimal from 'decimal.js';
+import dayjs from 'dayjs';
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+
+dayjs.extend(customParseFormat);
 
 interface CampaignStats {
     id: string;
@@ -48,21 +52,8 @@ interface CampaignReport {
     costPerCart: number;
 }
 
-const parseDDMMYYYYToISO = (ddmmyyyy: string): string => {
-    const [dd, mm, yyyy] = ddmmyyyy.split('.');
-    return `${yyyy}-${mm}-${dd}T00:00:00.000Z`;
-};
-
-const safeNumber = (val: unknown): number => {
-    if (val === undefined || val === null || val === '') return 0;
-    return Number(String(val).replace(/\s+/g, '').replace(',', '.'));
-};
-
-const safeToNumber = (value: unknown): number =>
-    toNumber(typeof value === 'string' ? value : String(value)) || 0;
-
-const safeDivide = (a: number, b: number): number =>
-    b > 0 ? Number((a / b).toFixed(2)) : 0;
+const toDecimal = (val: unknown) =>
+    decimal(String(val ?? 0).replace(/\s+/g, '').replace(',', '.'));
 
 export class AdvertisingService {
     constructor(private adsRepo: AdvertisingRepository) {
@@ -70,28 +61,41 @@ export class AdvertisingService {
 
     async buildCompany(campaign: CampaignStats): Promise<CampaignReport | null> {
         try {
+            const clicks = toDecimal(campaign.clicks);
+            const views = toDecimal(campaign.views);
+            const moneySpent = toDecimal(campaign.moneySpent);
+            const toCart = toDecimal(campaign.toCart);
+
             return {
                 id: campaign.id,
                 title: campaign.title ?? '',
                 status: campaign.status ?? '',
                 sku: campaign.sku ?? '',
 
-                ctr: safeDivide(safeNumber(campaign.clicks), safeNumber(campaign.views)) * 100,
-                toCartPrice: safeDivide(safeToNumber(campaign.moneySpent), safeNumber(campaign.toCart)),
+                ctr: views.gt(0)
+                    ? clicks.div(views).mul(100).toDecimalPlaces(2).toNumber()
+                    : 0,
+                toCartPrice: toCart.gt(0)
+                    ? moneySpent.div(toCart).toDecimalPlaces(2).toNumber()
+                    : 0,
 
                 type: campaign.type ?? '',
-                clicks: safeNumber(campaign.clicks),
-                moneySpent: Number(safeToNumber(campaign.moneySpent).toFixed(2)),
-                views: safeNumber(campaign.views),
-                avgBid: Number(safeNumber(campaign.avgBid).toFixed(2)),
-                weeklyBudget: safeToNumber(campaign.weeklyBudget),
-                toCart: safeNumber(campaign.toCart),
+                clicks: clicks.toNumber(),
+                moneySpent: moneySpent.toDecimalPlaces(2).toNumber(),
+                views: views.toNumber(),
+                avgBid: toDecimal(campaign.avgBid).toDecimalPlaces(2).toNumber(),
+                weeklyBudget: toDecimal(campaign.weeklyBudget).toNumber(),
+                toCart: toCart.toNumber(),
 
-                orders: safeNumber(campaign.orders),
-                ordersMoney: Number(safeToNumber(campaign.ordersMoney).toFixed(2)),
+                orders: toDecimal(campaign.orders).toNumber(),
+                ordersMoney: toDecimal(campaign.ordersMoney).toDecimalPlaces(2).toNumber(),
 
-                crToCart: safeDivide(safeNumber(campaign.toCart), safeNumber(campaign.clicks)) * 100,
-                costPerCart: safeDivide(safeToNumber(campaign.moneySpent), safeNumber(campaign.toCart)),
+                crToCart: clicks.gt(0)
+                    ? toCart.div(clicks).mul(100).toDecimalPlaces(2).toNumber()
+                    : 0,
+                costPerCart: toCart.gt(0)
+                    ? moneySpent.div(toCart).toDecimalPlaces(2).toNumber()
+                    : 0,
             };
         } catch (error) {
             logger.error({err: error}, '❌ Ошибка в buildCompany');
@@ -218,8 +222,8 @@ export class AdvertisingService {
                     costPerCart: 0,
 
                     // Числовые поля: приводим с запятых к числу
-                    moneySpent: Number(safeNumber(cpoItem.moneySpent).toFixed(2)),
-                    avgBid: Number(safeNumber(cpoItem.bidValue).toFixed(2)),
+                    moneySpent: toDecimal(cpoItem.moneySpent).toDecimalPlaces(2).toNumber(),
+                    avgBid: toDecimal(cpoItem.bidValue).toDecimalPlaces(2).toNumber(),
                     weeklyBudget: 0,
 
                     orders: 0,
@@ -227,7 +231,7 @@ export class AdvertisingService {
                 });
 
                 // Дата из отчёта часто в формате "DD.MM.YYYY" — нельзя парсить через new Date(...)
-                const savedAtISO = parseDDMMYYYYToISO(String(cpoItem.date));
+                const savedAtISO = dayjs(String(cpoItem.date), 'DD.MM.YYYY').format('YYYY-MM-DD[T]00:00:00.000[Z]');
                 await this.adsRepo.create(campaign, savedAtISO);
             }
         }
