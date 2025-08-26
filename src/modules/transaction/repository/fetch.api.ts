@@ -1,5 +1,5 @@
-import {sellerClient} from "@/infrastructure/clients/ozon/seller";
-import {ApiTransactionDto} from '@/modules/transaction/dto/api-transaction.dto';
+import { sellerClient } from "@/infrastructure/clients/ozon/seller";
+import { ApiTransactionDto } from '@/modules/transaction/dto/api-transaction.dto';
 
 export interface FilterParams {
     filter: {
@@ -11,10 +11,15 @@ export interface FilterParams {
     },
 }
 
-export async function fetch(params: FilterParams): Promise<ApiTransactionDto[]> {
+/**
+ * Fetches transactions from the Ozon API.
+ * The API is paginated; this function iterates through all pages
+ * and returns a consolidated array of ApiTransactionDto objects.
+ */
+export async function fetchTransactions(params: FilterParams): Promise<ApiTransactionDto[]> {
     const pageSize = 1000;
     let page = 1;
-    const allOperations: any[] = [];
+    const allOperations: ApiTransactionDto[] = [];
     const parseParams: FilterParams = {
         filter: {},
     };
