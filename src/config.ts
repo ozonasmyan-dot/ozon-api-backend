@@ -19,4 +19,5 @@ export const SELLER_API_KEY = requireEnv('OZON_SELLER_API_KEY');
 export const CORS_ORIGIN = requireEnv('CORS_ORIGIN');
 export const PORT = parseInt(requireEnv('PORT'), 10);
 export const BOT_TOKEN = requireEnv('BOT_TOKEN');
+export const CRON_CHAT_ID = requireEnv('CRON_CHAT_ID');
 
