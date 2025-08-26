@@ -1,4 +1,4 @@
-import { postingsFetch } from '@/modules/posting/repository/fetch.api';
+import { postingsFetch, PostingFetchParams } from '@/modules/posting/repository/fetch.api';
 import { postingsFetchItem } from '@/modules/posting/repository/fetch-item.api';
 import { PostingDto } from '@/modules/posting/dto/posting.dto';
 import decimal from 'decimal.js';
@@ -16,12 +16,13 @@ export class PostingsService {
         let postingsList: PostingDto[] = [];
 
         try {
-            const postings: ApiPostingDto[] = await postingsFetch({
+            const params: PostingFetchParams = {
                 filter: {
                     since,
                     to,
                 },
-            });
+            };
+            const postings: ApiPostingDto[] = await postingsFetch(params);
 
             for (const posting of postings) {
                 postingsList.push({
