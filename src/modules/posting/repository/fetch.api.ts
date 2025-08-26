@@ -1,12 +1,24 @@
-import {sellerClient} from "@/infrastructure/clients/ozon/seller";
-import {ApiPostingDto} from "@/modules/posting/dto/api-posting.dto";
+import { sellerClient } from "@/infrastructure/clients/ozon/seller";
+import { ApiPostingDto } from "@/modules/posting/dto/api-posting.dto";
 
-export async function postingsFetch(params: any = {}): Promise<ApiPostingDto[]> {
+export interface PostingFetchParams {
+    filter?: {
+        since?: string | Date;
+        to?: string | Date;
+        status?: string;
+        posting_number?: string;
+        order_number?: string;
+    };
+}
+
+export async function postingsFetch(
+    params: PostingFetchParams = {},
+): Promise<ApiPostingDto[]> {
     const limit = 1000;
     let offset = 0;
     let hasMore = true;
 
-    const allPostings = [];
+    const allPostings: ApiPostingDto[] = [];
 
     while (hasMore) {
         const response = await sellerClient.post(
