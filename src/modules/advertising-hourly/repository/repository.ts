@@ -1,11 +1,22 @@
 import {PrismaClient, AdvertisingHourly} from '@prisma/client';
 import prisma from '@/infrastructure/database/prismaClient';
+import dayjs from 'dayjs';
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 export class AdvertisingHourlyRepository {
-    constructor(private prismaClient: PrismaClient = prisma) {}
+    constructor(private prismaClient: PrismaClient = prisma) {
+    }
 
     async create(campaign: any): Promise<AdvertisingHourly> {
-        const now = new Date();
+        const yerevan = dayjs().tz("Asia/Yerevan");
+
+        const fakeUtc = dayjs.utc(yerevan.format("YYYY-MM-DDTHH:mm:ss.SSS"));
+
+        const now = fakeUtc.toISOString();
 
         return this.prismaClient.advertisingHourly.upsert({
             where: {
@@ -55,7 +66,7 @@ export class AdvertisingHourlyRepository {
 
     async getAll(): Promise<AdvertisingHourly[]> {
         return this.prismaClient.advertisingHourly.findMany({
-            orderBy: { updatedAt: 'desc' },
+            orderBy: {updatedAt: 'desc'},
         });
     }
 }

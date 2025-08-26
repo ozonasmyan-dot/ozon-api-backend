@@ -4,7 +4,7 @@ import {logger} from '@/shared/logger';
 
 const service = container.resolve(AdvertisingHourlyService);
 
-const FOUR_HOURS = 4 * 60 * 60 * 1000;
+const FIVE_MINUTES = 2 * 60 * 1000;
 
 const run = async () => {
     try {
@@ -16,4 +16,4 @@ const run = async () => {
 };
 
 run();
-setInterval(run, FOUR_HOURS);
+setInterval(run, FIVE_MINUTES);
