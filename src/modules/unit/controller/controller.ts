@@ -11,7 +11,7 @@ export const unitController = {
 
         const data = await unitService.getAll();
         if (data.length === 0) {
-            throw new AppError('Units not found', 404);
+            throw new AppError<undefined>('Units not found', 404);
         }
 
         res.json(data);
@@ -20,7 +20,7 @@ export const unitController = {
     async getAll(req: Request, res: Response): Promise<any> {
         const data = await unitService.getAll();
         if (data.length === 0) {
-            throw new AppError('Units not found', 404);
+            throw new AppError<undefined>('Units not found', 404);
         }
 
         res.json(data);

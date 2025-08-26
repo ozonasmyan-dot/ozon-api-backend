@@ -53,7 +53,7 @@ export class PostingsService {
             }
         } catch (error) {
             logger.error({ err: error }, 'Failed to fetch postings');
-            throw new AppError('Failed to fetch postings', 502, error);
+            throw new AppError<unknown>('Failed to fetch postings', 502, error);
         }
 
         return postingsList ?? [];
@@ -66,7 +66,7 @@ export class PostingsService {
 
         if (!postingApi) {
             logger.warn({ postingNumber }, 'Posting not found');
-            throw new AppError('Posting not found', 404);
+            throw new AppError<undefined>('Posting not found', 404);
         }
 
         const posting: Partial<PostingDto> = {
