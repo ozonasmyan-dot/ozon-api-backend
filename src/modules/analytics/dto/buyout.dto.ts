@@ -7,6 +7,7 @@ export interface BuyoutRequestDto {
 export interface BuyoutItemDto {
     sku: string;
     statuses: Record<string, number>;
+    total: number;
     buyout: number;
 }
 
