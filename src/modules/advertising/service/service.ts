@@ -11,39 +11,75 @@ import {generateDatesFrom} from "@/shared/utils/date.utils";
 import {fetchApiReportData} from "@/infrastructure/clients/utils/report";
 import {get62DayRanges} from '@/shared/utils/date.utils';
 
+interface CampaignStats {
+    id: string;
+    title?: string;
+    status?: string;
+    sku?: string;
+    type?: string;
+    clicks?: number | string;
+    views?: number | string;
+    moneySpent?: number | string;
+    avgBid?: number | string;
+    weeklyBudget?: number | string;
+    toCart?: number | string;
+    orders?: number | string;
+    ordersMoney?: number | string;
+    [key: string]: unknown;
+}
+
+interface CampaignReport {
+    id: string;
+    title: string;
+    status: string;
+    sku: string;
+    ctr: number;
+    toCartPrice: number;
+    type: string;
+    clicks: number;
+    moneySpent: number;
+    views: number;
+    avgBid: number;
+    weeklyBudget: number;
+    toCart: number;
+    orders: number;
+    ordersMoney: number;
+    crToCart: number;
+    costPerCart: number;
+}
 
 const parseDDMMYYYYToISO = (ddmmyyyy: string): string => {
     const [dd, mm, yyyy] = ddmmyyyy.split('.');
     return `${yyyy}-${mm}-${dd}T00:00:00.000Z`;
 };
 
-const safeNumber = (val: any): number => {
+const safeNumber = (val: unknown): number => {
     if (val === undefined || val === null || val === '') return 0;
     return Number(String(val).replace(/\s+/g, '').replace(',', '.'));
 };
+
+const safeToNumber = (value: unknown): number =>
+    toNumber(typeof value === 'string' ? value : String(value)) || 0;
+
+const safeDivide = (a: number, b: number): number =>
+    b > 0 ? Number((a / b).toFixed(2)) : 0;
 
 export class AdvertisingService {
     constructor(private adsRepo: AdvertisingRepository) {
     }
 
-    async buildCompany(campaign: any) {
+    async buildCompany(campaign: CampaignStats): Promise<CampaignReport | null> {
         try {
-            const safeNumber = (value: any): number => Number(value) || 0;
-            const safeToNumber = (value: any): number =>
-                toNumber(typeof value === 'string' ? value : String(value)) || 0;
-            const safeDivide = (a: number, b: number): number =>
-                b > 0 ? Number((a / b).toFixed(2)) : 0;
-
             return {
                 id: campaign.id,
                 title: campaign.title ?? '',
                 status: campaign.status ?? '',
-                sku: campaign.sku,
+                sku: campaign.sku ?? '',
 
                 ctr: safeDivide(safeNumber(campaign.clicks), safeNumber(campaign.views)) * 100,
                 toCartPrice: safeDivide(safeToNumber(campaign.moneySpent), safeNumber(campaign.toCart)),
 
-                type: campaign.type,
+                type: campaign.type ?? '',
                 clicks: safeNumber(campaign.clicks),
                 moneySpent: Number(safeToNumber(campaign.moneySpent).toFixed(2)),
                 views: safeNumber(campaign.views),
@@ -51,7 +87,7 @@ export class AdvertisingService {
                 weeklyBudget: safeToNumber(campaign.weeklyBudget),
                 toCart: safeNumber(campaign.toCart),
 
-                orders: Number(campaign.orders),
+                orders: safeNumber(campaign.orders),
                 ordersMoney: Number(safeToNumber(campaign.ordersMoney).toFixed(2)),
 
                 crToCart: safeDivide(safeNumber(campaign.toCart), safeNumber(campaign.clicks)) * 100,
@@ -63,17 +99,17 @@ export class AdvertisingService {
         }
     };
 
-    async fetchPpcCampaigns(date: string) {
+    async fetchPpcCampaigns(date: string): Promise<CampaignStats[]> {
         logger.info(`🚀 Загружаем кампании на дату: ${date}`);
 
-        const campaigns: any = [];
+        const campaigns: CampaignStats[] = [];
 
         const dailyStats = await fetchDailyCampaignStatistics({
             dateFrom: date,
             dateTo: date,
         });
 
-        const onlyPpcCampaigns = dailyStats.filter(
+        const onlyPpcCampaigns = (dailyStats as CampaignStats[]).filter(
             (item) => item.title !== "Продвижение в поиске — все товары"
         );
 
@@ -93,12 +129,12 @@ export class AdvertisingService {
 
                 if (objects[0]) {
                     campaigns.push({
-                        ...stats,
+                        ...(stats as CampaignStats),
                         orders: 0,
                         ordersMoney: '0,00',
                         type: placement[0] ?? '',
                         sku: objects[0]?.id ?? '',
-                    });
+                    } as CampaignStats);
                 }
 
                 logger.info(`✅ Кампания ${campaign.id} успешно загружена`);
