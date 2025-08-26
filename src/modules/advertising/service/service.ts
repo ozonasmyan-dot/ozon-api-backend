@@ -59,6 +59,10 @@ export class AdvertisingService {
     constructor(private adsRepo: AdvertisingRepository) {
     }
 
+    async getAll() {
+        return this.adsRepo.getAll();
+    }
+
     async buildCompany(campaign: CampaignStats): Promise<CampaignReport | null> {
         try {
             const clicks = toDecimal(campaign.clicks);
