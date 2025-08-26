@@ -29,6 +29,29 @@ model Advertising {
   @@unique([savedAt, campaignId])
 }
 
+model AdvertisingHourly {
+  id           String   @id @default(uuid())
+  campaignId   String
+  productId    String
+  type         String
+  moneySpent   Float
+  views        Int
+  clicks       Int
+  toCart       Int
+  ctr          Float
+  weeklyBudget Int
+  status       String
+  avgBid       Float
+  crToCart     Float
+  costPerCart  Float
+  savedAt      DateTime
+  updatedAt    DateTime
+  orders       Int
+  ordersMoney  Float
+
+  @@unique([updatedAt, campaignId])
+}
+
 model UnitNew {
   id                   String    @id @default(cuid())
   product              String
