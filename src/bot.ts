@@ -12,11 +12,16 @@ const unitService = container.resolve(UnitService);
 const advertisingService = container.resolve(AdvertisingService);
 const analyticsService = container.resolve(AnalyticsService);
 
-const adsTypes = {
+type AdType =
+    | 'PLACEMENT_TOP_PROMOTION'
+    | 'CPO'
+    | 'PLACEMENT_SEARCH_AND_CATEGORY';
+
+const adsTypes: Record<AdType, string> = {
     'PLACEMENT_TOP_PROMOTION': 'Вывод в топ',
     'CPO': 'Оплата за заказ',
     'PLACEMENT_SEARCH_AND_CATEGORY': 'Трафареты',
-} as const;
+};
 
 const productsSku: Record<string, string> = {
     '2586085325': 'Шапка беж',
@@ -47,7 +52,7 @@ function formatDrrMessage({products, totals}: DrrResponseDto): string {
         text += `   • Реклама: ${formatCurrency(p.ads.totals)}\n`;
 
         p.ads.items.forEach((item) => {
-            const label = (adsTypes as any)[item.type] ?? item.type;
+            const label = item.type in adsTypes ? adsTypes[item.type as AdType] : item.type;
             text += `      - ${label}: ${formatCurrency(item.money)}\n`;
         });
 
