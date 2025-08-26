@@ -28,7 +28,7 @@ export const unitController = {
     },
 
     async importData(req: Request, res: Response): Promise<void> {
-        const data = await unitService.getAll();
+        const data = await unitService.getImportData();
         if (data.length === 0) {
             throw new AppError<undefined>('Units not found', 404);
         }
