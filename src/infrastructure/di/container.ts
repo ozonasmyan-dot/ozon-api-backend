@@ -2,8 +2,6 @@ import {sellerClient} from '@/infrastructure/clients/ozon/seller';
 import {performanceClient} from '@/infrastructure/clients/ozon/performance';
 import {AdvertisingRepository} from '@/modules/advertising/repository/repository';
 import {AdvertisingService} from '@/modules/advertising/service/service';
-import {AdvertisingHourlyRepository} from '@/modules/advertising-hourly/repository/repository';
-import {AdvertisingHourlyService} from '@/modules/advertising-hourly/service/service';
 import {AnalyticsService} from '@/modules/analytics/service/service';
 import {UnitRepository} from '@/modules/unit/repository/repository';
 import {PostingsService} from '@/modules/posting/service/service';
@@ -42,15 +40,10 @@ container.register('performanceClient', () => performanceClient);
 // Repositories
 container.register(AdvertisingRepository, () => new AdvertisingRepository());
 container.register(UnitRepository, () => new UnitRepository());
-container.register(AdvertisingHourlyRepository, () => new AdvertisingHourlyRepository());
 
 // Services
 container.register(AdvertisingService, () => new AdvertisingService(
     container.resolve(AdvertisingRepository),
-));
-container.register(AdvertisingHourlyService, () => new AdvertisingHourlyService(
-    container.resolve(AdvertisingService),
-    container.resolve(AdvertisingHourlyRepository),
 ));
 
 container.register(PostingsService, () => new PostingsService());

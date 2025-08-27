@@ -1,6 +1,5 @@
 import container from '@/infrastructure/di/container';
 import {AdvertisingHourlyService} from '@/modules/advertising-hourly/service/service';
-import {AdvertisingService} from '@/modules/advertising/service/service';
 import {UnitRepository} from '@/modules/unit/repository/repository';
 import {logger} from '@/shared/logger';
 import {Telegraf} from 'telegraf';
@@ -118,5 +117,5 @@ const run = async () => {
     }
 };
 
-run();
+// run();
 setInterval(run, FIVE_MINUTES);

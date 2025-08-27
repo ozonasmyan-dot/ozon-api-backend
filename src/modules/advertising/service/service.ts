@@ -11,8 +11,12 @@ import {fetchApiReportData} from "@/infrastructure/clients/utils/report";
 import {get62DayRanges} from '@/shared/utils/date.utils';
 import decimal from 'decimal.js';
 import dayjs from 'dayjs';
-import customParseFormat from 'dayjs/plugin/customParseFormat';
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import customParseFormat from "dayjs/plugin/customParseFormat";
 
+dayjs.extend(utc);
+dayjs.extend(timezone);
 dayjs.extend(customParseFormat);
 
 interface CampaignStats {
@@ -29,6 +33,7 @@ interface CampaignStats {
     toCart?: number | string;
     orders?: number | string;
     ordersMoney?: number | string;
+
     [key: string]: unknown;
 }
 
@@ -165,7 +170,6 @@ export class AdvertisingService {
                 },
             });
 
-
             const rows = products?.['12950100']?.report?.rows ?? [];
             return rows as any[];
         } catch (error: any) {
@@ -179,7 +183,7 @@ export class AdvertisingService {
 
     async sync() {
         const lastAd = await this.adsRepo.lastRow();
-        const dateOnly = lastAd?.savedAt ? lastAd?.savedAt.toISOString().split("T")[0] : '2024-10-01';
+        const dateOnly = lastAd?.savedAt ? lastAd?.savedAt.toISOString().split("T")[0] : '2025-08-20';
 
         const dates = generateDatesFrom(dateOnly);
         const datesCPO = get62DayRanges(dateOnly);
@@ -188,14 +192,22 @@ export class AdvertisingService {
 
         for (const date of dates) {
             logger.info(`📌 Обработка даты: ${date}`);
+            const yerevan = dayjs(date).tz("Asia/Yerevan");
+            const fakeUtc = dayjs.utc(yerevan.format("YYYY-MM-DDTHH:mm:ss.SSS"));
+            const now = dayjs();
+
+            const dateSave = fakeUtc
+                .hour(now.hour())
+                .minute(now.minute())
+                .second(now.second())
+                .millisecond(now.millisecond());
 
             const campaigns = await this.fetchPpcCampaigns(date);
-            // const campaignsCPO = await this.fetchCpoCampaigns(date);
 
             for (const campaign of campaigns) {
                 const campaignBuild = await this.buildCompany(campaign);
 
-                await this.adsRepo.create(campaignBuild, date);
+                await this.adsRepo.create(campaignBuild, dateSave.toDate());
             }
         }
 
@@ -204,7 +216,6 @@ export class AdvertisingService {
             if (!Array.isArray(data) || data.length === 0) continue;
 
             for (const cpoItem of data) {
-                // обязательно прокидываем campaignId, иначе upsert по уникальному (savedAt, campaignId) не сработает
                 const campaign = await this.buildCompany({
                     id: `12950100-${cpoItem.orderId}`,
 
@@ -234,9 +245,17 @@ export class AdvertisingService {
                     ordersMoney: 0,
                 });
 
-                // Дата из отчёта часто в формате "DD.MM.YYYY" — нельзя парсить через new Date(...)
-                const savedAtISO = dayjs(String(cpoItem.date), 'DD.MM.YYYY').format('YYYY-MM-DD[T]00:00:00.000[Z]');
-                await this.adsRepo.create(campaign, savedAtISO);
+                const yerevan = dayjs.tz(cpoItem.date, "DD.MM.YYYY", "Asia/Yerevan");
+                const fakeUtc = dayjs.utc(yerevan.format("YYYY-MM-DDTHH:mm:ss.SSS"));
+                const now = dayjs();
+
+                const dateSave = fakeUtc
+                    .hour(now.hour())
+                    .minute(now.minute())
+                    .second(now.second())
+                    .millisecond(now.millisecond());
+
+                await this.adsRepo.create(campaign, dateSave.toDate());
             }
         }
 
@@ -245,3 +264,8 @@ export class AdvertisingService {
         return 'ОК';
     }
 }
+
+
+const savedAtISO = dayjs(String('2025.08.27'), '"DD.MM.YYYY"').format('YYYY-MM-DD[T]00:00:00.000[Z]');
+
+console.log(savedAtISO)
