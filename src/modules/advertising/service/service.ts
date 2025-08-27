@@ -68,6 +68,12 @@ export class AdvertisingService {
         return this.adsRepo.getAll();
     }
 
+    async getByDate(date: string) {
+        const start = dayjs(date).format('YYYY-MM-DD[T]00:00:00[Z]');
+        const end = dayjs(date).format('YYYY-MM-DD[T]23:59:59[Z]');
+        return this.adsRepo.getByDate(start, end);
+    }
+
     async buildCompany(campaign: CampaignStats): Promise<CampaignReport | null> {
         try {
             const clicks = toDecimal(campaign.clicks);

@@ -43,6 +43,17 @@ export class AdvertisingRepository {
         });
     }
 
+    async getByDate(start: string, end: string): Promise<Advertising[]> {
+        return this.prismaClient.advertising.findMany({
+            where: {
+                savedAt: {
+                    gte: start,
+                    lte: end,
+                },
+            },
+        });
+    }
+
     async getAdsAggByProductType(start: string, end: string): Promise<{ items: AdItem[]; totals: number }> {
         const totals = await this.prismaClient.advertising.groupBy({
             by: [
