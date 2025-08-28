@@ -68,12 +68,6 @@ export class AdvertisingService {
         return this.adsRepo.getAll();
     }
 
-    async getByDate(date: string) {
-        const start = dayjs(date).format('YYYY-MM-DD[T]00:00:00[Z]');
-        const end = dayjs(date).format('YYYY-MM-DD[T]23:59:59[Z]');
-        return this.adsRepo.getByDate(start, end);
-    }
-
     async buildCompany(campaign: CampaignStats): Promise<CampaignReport | null> {
         try {
             const clicks = toDecimal(campaign.clicks);
@@ -189,7 +183,7 @@ export class AdvertisingService {
 
     async sync() {
         const lastAd = await this.adsRepo.lastRow();
-        const dateOnly = lastAd?.savedAt ? lastAd?.savedAt.toISOString().split("T")[0] : '2025-08-20';
+        const dateOnly = lastAd?.savedAt ? lastAd?.savedAt.toISOString().split("T")[0] : '2025-08-28';
 
         const dates = generateDatesFrom(dateOnly);
         const datesCPO = get62DayRanges(dateOnly);
@@ -270,8 +264,3 @@ export class AdvertisingService {
         return 'ОК';
     }
 }
-
-
-const savedAtISO = dayjs(String('2025.08.27'), '"DD.MM.YYYY"').format('YYYY-MM-DD[T]00:00:00.000[Z]');
-
-console.log(savedAtISO)

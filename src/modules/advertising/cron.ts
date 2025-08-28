@@ -1,12 +1,14 @@
 import container from '@/infrastructure/di/container';
-import {AdvertisingService} from '@/modules/advertising/service/service';
 import {UnitRepository} from '@/modules/unit/repository/repository';
 import {logger} from '@/shared/logger';
+import { stringify } from "csv-stringify/sync";
 import {Telegraf} from 'telegraf';
 import {BOT_TOKEN, CRON_CHAT_ID} from '@/config';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
+import {AdvertisingRepository} from "@/modules/advertising/repository/repository";
+import {AdvertisingService} from "@/modules/advertising/service/service";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -20,80 +22,140 @@ const productsSku: Record<string, string> = {
     '1828048540': 'Сумка бордовая',
 };
 
+const adsRepo = container.resolve(AdvertisingRepository);
 const service = container.resolve(AdvertisingService);
 const unitRepo = container.resolve(UnitRepository);
 const telegram = new Telegraf(BOT_TOKEN).telegram;
 
-const notify = async (text: string): Promise<void> => {
-    try {
-        await telegram.sendMessage(CRON_CHAT_ID, text);
-    } catch (err) {
-        logger.error({err}, 'Failed to send Telegram notification');
-    }
-};
 
 const sendCsv = async (): Promise<void> => {
     try {
-        const date = dayjs().format('YYYY-MM-DD');
-        const rows = await service.getByDate(date);
-        if (!rows.length) return;
+        const resultMap: Record<string, any> = {};
+        const cpoAgg = await adsRepo.getCPOAgg();
+        const otherAds = await adsRepo.otherAds();
+        const units = await unitRepo.getTodayUnitBySku();
+        const headers = [
+            'productId', 'moneySpent', 'views', 'clicks', 'toCart', 'savedAt', 'unitCount', 'unitMoney', 'drr'
+        ];
 
-        const start = dayjs.tz(date, 'Asia/Yerevan').startOf('day');
-        const end = dayjs.tz(date, 'Asia/Yerevan').endOf('day');
-        const {items: unitOrders} = await unitRepo.getUnitsRevenueBySku(
-            start.format('YYYY-MM-DD[T]HH:mm:ss[Z]'),
-            end.format('YYYY-MM-DD[T]HH:mm:ss[Z]'),
-        );
-        const unitMap = new Map(unitOrders.map(o => [o.sku, o]));
-
-        const grouped: Record<string, typeof rows> = {};
-        for (const row of rows) {
-            grouped[row.productId] = grouped[row.productId] || [];
-            grouped[row.productId].push(row);
+        for (const c of cpoAgg) {
+            resultMap[c.productId] = {
+                productId: c.productId,
+                ads: [
+                    {
+                        type: "CPO",
+                        moneySpent: c._sum.moneySpent ?? 0,
+                        views: c._sum.views ?? 0,
+                        clicks: c._sum.clicks ?? 0,
+                        toCart: c._sum.toCart ?? 0,
+                        ctr: c._sum.ctr ?? 0,
+                        avgBid: c._sum.avgBid ?? 0,
+                        crToCart: c._sum.crToCart ?? 0,
+                        costPerCart: c._sum.costPerCart ?? 0,
+                    },
+                ],
+                totals: {moneyCount: 0, count: 0},
+            };
         }
 
-        const headers = [
-            'productId','moneySpent','views','clicks','toCart','savedAt','unitCount','unitMoney','drr'
-        ];
-        for (const [sku, items] of Object.entries(grouped)) {
-            const agg = items.reduce((acc, curr) => {
-                acc.moneySpent += Number(curr.moneySpent) || 0;
-                acc.views += Number(curr.views) || 0;
-                acc.clicks += Number(curr.clicks) || 0;
-                acc.toCart += Number(curr.toCart) || 0;
-                const upd = dayjs(curr.savedAt);
-                if (!acc.savedAt || upd.isAfter(acc.savedAt)) acc.savedAt = upd;
-                return acc;
-            }, {
-                moneySpent: 0,
-                views: 0,
-                clicks: 0,
-                toCart: 0,
-                savedAt: null as dayjs.Dayjs | null,
+        for (const ad of otherAds) {
+            if (!resultMap[ad.productId]) {
+                resultMap[ad.productId] = {
+                    productId: ad.productId,
+                    ads: [],
+                    totals: {moneyCount: 0, count: 0},
+                };
+            }
+            resultMap[ad.productId].ads.push(ad);
+        }
+
+        for (const u of units) {
+            if (!resultMap[u.sku]) {
+                resultMap[u.sku] = {
+                    productId: u.sku,
+                    ads: [],
+                    totals: { moneyCount: 0, count: 0 },
+                };
+            }
+            resultMap[u.sku].totals = {
+                moneyCount: u._sum.price ?? 0,
+                count: u._count.id,
+            };
+        }
+
+        const finalArray = Object.values(resultMap);
+
+        for (const product of finalArray) {
+            let rows: any[] = [];
+
+            // строки по рекламе
+            for (const ad of product.ads) {
+                rows.push({
+                    productId: productsSku[product.productId],
+                    type: ad.type,
+                    moneySpent: ad.moneySpent,
+                    views: ad.views,
+                    clicks: ad.clicks,
+                    toCart: ad.toCart,
+                    ctr: ad.ctr,
+                    avgBid: ad.avgBid,
+                    crToCart: ad.crToCart,
+                    costPerCart: ad.costPerCart,
+                    soldCount: product.totals.count,
+                    soldAmount: product.totals.moneyCount,
+                });
+            }
+
+            // сортировка по moneySpent (DESC)
+            rows = rows.sort((a, b) => (b.moneySpent ?? 0) - (a.moneySpent ?? 0));
+
+            // считаем DRR
+            const totalAdsSpent = rows.reduce((sum, r) => sum + (Number(r.moneySpent) || 0), 0);
+            const soldAmount = product.totals.moneyCount;
+            const soldCount = product.totals.count;
+            const drr = soldAmount > 0 ? ((totalAdsSpent / soldAmount) * 100).toFixed(1) : "0";
+
+            // нижняя строка TOTAL
+            rows.push({
+                productId: "TOTAL",
+                type: "",
+                moneySpent: "",
+                views: "",
+                clicks: "",
+                toCart: "",
+                ctr: "",
+                avgBid: "",
+                crToCart: "",
+                costPerCart: "",
+                soldCount,
+                soldAmount,
+                drr,
             });
 
-            const unit = unitMap.get(sku);
-            const drr = unit?.money ? Math.floor((agg.moneySpent / unit.money) * 100) : 0;
-            const csvRows = [
-                headers.join(','),
-                [
-                    sku,
-                    agg.moneySpent,
-                    agg.views,
-                    agg.clicks,
-                    agg.toCart,
-                    agg.savedAt ? agg.savedAt.format('YYYY-MM-DD HH mm ss') : '',
-                    unit?.count ?? 0,
-                    unit?.money ?? 0,
-                    drr,
-                ].join(','),
-            ];
+            // превращаем в CSV
+            const csv = stringify(rows, {
+                header: true,
+                columns: [
+                    "productId",
+                    "type",
+                    "moneySpent",
+                    "views",
+                    "clicks",
+                    "toCart",
+                    "ctr",
+                    "avgBid",
+                    "crToCart",
+                    "costPerCart",
+                    "soldCount",
+                    "soldAmount",
+                    "drr",
+                ],
+            });
 
-            const csv = csvRows.join('\n');
-            const productName = (productsSku[sku] || sku).replace(/\s+/g, '_');
+            // отправляем файл
             await telegram.sendDocument(CRON_CHAT_ID, {
                 source: Buffer.from(csv),
-                filename: `${productName}-${date}.csv`,
+                filename: `${productsSku[product.productId]}.csv`,
             });
         }
     } catch (err) {
@@ -105,7 +167,15 @@ const FIVE_MINUTES = 5 * 60 * 1000;
 
 const run = async () => {
     try {
-        await service.sync();
+        const dateStr = dayjs().format("YYYY-MM-DD - HH:mm:ss");
+
+        // await service.sync();
+
+        await telegram.sendMessage(
+            CRON_CHAT_ID,
+            `✅ Получен репорт ${dateStr}`
+        );
+
         await sendCsv();
     } catch (error) {
         logger.error({err: error}, '❌ Failed to save hourly advertising snapshot');
