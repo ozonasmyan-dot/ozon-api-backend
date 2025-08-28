@@ -2,6 +2,7 @@ import {Prisma, PrismaClient, UnitNew} from '@prisma/client';
 import {UnitDto} from "@/modules/unit/dto/unit.dto";
 import prisma from "@/infrastructure/database/prismaClient";
 import {OrderItem} from "@/modules/analytics/dto/items.dto";
+import dayjs from "dayjs";
 
 export class UnitRepository {
     constructor(private prismaClient: PrismaClient = prisma) {
@@ -123,6 +124,7 @@ export class UnitRepository {
             money: item._sum.price ?? 0,
             count: item._count.sku,
         }));
+
         const totals = items.reduce(
             (acc, item) => {
                 acc.money += item.money;
@@ -137,6 +139,7 @@ export class UnitRepository {
             totals,
         };
     }
+
     async getStatusCountsBySku(start: string, end: string): Promise<{ createdAt: Date; sku: string; status: string }[]> {
         const units = await this.prismaClient.unitNew.findMany({
             where: {
@@ -185,5 +188,22 @@ export class UnitRepository {
             costPrice: Number(u.costPrice),
             totalServices: Number(u.totalServices),
         }));
+    }
+
+    async getTodayUnitBySku() {
+        const todayStart = dayjs().startOf('day').format('YYYY-MM-DD[T]00:00:00[Z]');
+        const todayEnd = dayjs().endOf('day').format('YYYY-MM-DD[T]23:59:59[Z]');
+
+        return prisma.unitNew.groupBy({
+            by: ["sku"],
+            where: {
+                createdAt: {
+                    gte: todayStart,
+                    lte: todayEnd
+                },
+            },
+            _count: {id: true},
+            _sum: {price: true},
+        });
     }
 }

@@ -1,6 +1,7 @@
 import {PrismaClient, Advertising} from "@prisma/client";
 import prisma from "@/infrastructure/database/prismaClient";
 import {AdItem} from "@/modules/analytics/dto/items.dto";
+import dayjs from "dayjs";
 
 export class AdvertisingRepository {
     constructor(private prismaClient: PrismaClient = prisma) {
@@ -71,5 +72,58 @@ export class AdvertisingRepository {
             items,
             totals: total,
         };
+    }
+
+    async getCPOAgg() {
+        const todayStart = dayjs().startOf('day').format('YYYY-MM-DD[T]00:00:00[Z]');
+        const todayEnd = dayjs().endOf('day').format('YYYY-MM-DD[T]23:59:59[Z]');
+
+        return prisma.advertising.groupBy({
+            by: ["productId"],
+            where: {
+                savedAt: {
+                    gte: todayStart,
+                    lte: todayEnd
+                },
+                type: "CPO",
+            },
+            _sum: {
+                moneySpent: true,
+                views: true,
+                clicks: true,
+                toCart: true,
+                ctr: true,
+                avgBid: true,
+                crToCart: true,
+                costPerCart: true,
+            },
+        });
+    }
+
+    async otherAds() {
+        const todayStart = dayjs().startOf('day').format('YYYY-MM-DD[T]00:00:00[Z]');
+        const todayEnd = dayjs().endOf('day').format('YYYY-MM-DD[T]23:59:59[Z]');
+
+        return prisma.advertising.findMany({
+            where: {
+                savedAt: {
+                    gte: todayStart,
+                    lte: todayEnd
+                },
+                NOT: {type: "CPO"},
+            },
+            select: {
+                productId: true,
+                type: true,
+                moneySpent: true,
+                views: true,
+                clicks: true,
+                toCart: true,
+                ctr: true,
+                avgBid: true,
+                crToCart: true,
+                costPerCart: true,
+            },
+        });
     }
 }
