@@ -7,7 +7,7 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Advertising {
+model AdvertisingStat {
   id           String   @id @default(uuid())
   campaignId   String
   productId    String
@@ -23,6 +23,17 @@ model Advertising {
   crToCart     Float
   costPerCart  Float
   savedAt      DateTime
+}
+
+model Advertising {
+  id         String   @id @default(uuid())
+  campaignId String
+  productId  String
+  type       String
+  moneySpent Float
+  savedAt    DateTime
+
+  @@unique([savedAt, campaignId, productId])
 }
 
 model UnitNew {

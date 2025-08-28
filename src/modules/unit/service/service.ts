@@ -19,8 +19,6 @@ export class UnitService {
     ) {
     }
 
-    async createUnitItem(posting: PostingDto, transactions?: TransactionDto[]): Promise<UnitDto>;
-    async createUnitItem(unit: UnitDto, transactions?: TransactionDto[]): Promise<UnitDto>;
     async createUnitItem(
         item: PostingDto | UnitDto,
         transactions: TransactionDto[] = [],
@@ -83,7 +81,7 @@ export class UnitService {
      * @remarks Side effects: Reads data from posting and transaction services
      * and writes log messages.
      */
-    async firstSync() {
+    async firstSync(): Promise<UnitDto[]> {
         logger.info('Starting initial unit synchronization');
 
         const units: UnitDto[] = [];
@@ -171,7 +169,7 @@ export class UnitService {
      * @remarks Side effects: Fetches transactions, queries and updates the
      * repository, and writes log messages.
      */
-    async combinePostingsAndTransactions() {
+    async combinePostingsAndTransactions(): Promise<void> {
         logger.info('Combining postings and transactions');
 
         const transactions = await this.getNewTransactions();
@@ -211,7 +209,7 @@ export class UnitService {
      * @remarks Side effects: Interacts with the repository and external
      * services and writes log messages.
      */
-    async sync() {
+    async sync(): Promise<void> {
         const emptyUnits = (await this.unitRepo.rowsCount()) === 0;
 
         if (emptyUnits) {
@@ -229,45 +227,7 @@ export class UnitService {
         await this.combinePostingsAndTransactions();
     }
 
-    /**
-     * Retrieves all units from the repository.
-     *
-     * @returns {Promise<UnitDto[]>} Array of units ordered by creation date.
-     * @remarks Side effects: Reads data from the unit repository.
-     */
     async getAll() {
         return await this.unitRepo.getAll();
-    }
-
-    /**
-     * Prepares unit data for Google Sheets import.
-     * Converts numeric monetary fields from cents to rubles and flattens
-     * nested structures for CSV serialization.
-     *
-     * @returns {Promise<Record<string, unknown>[]>} Array of plain objects
-     * suitable for CSV export.
-     */
-    async getImportData() {
-        const units = await this.unitRepo.getAll();
-
-        return units.map((u) => ({
-            postingNumber: u.postingNumber,
-            product: u.product,
-            sku: u.sku,
-            status: u.status,
-            createdAt: u.createdAt.toISOString(),
-            lastOperationDate: u.lastOperationDate
-                ? u.lastOperationDate.toISOString()
-                : '',
-            price: Number(u.price) / 100,
-            costPrice: Number(u.costPrice) / 100,
-            totalServices: Number(u.totalServices) / 100,
-            margin: Number(u.margin) / 100,
-            services: Array.isArray(u.services)
-                ? (u.services as any[])
-                    .map((s) => `${s.name}:${s.price}`)
-                    .join(';')
-                : '',
-        }));
     }
 }

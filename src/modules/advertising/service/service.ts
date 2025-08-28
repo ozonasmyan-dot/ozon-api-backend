@@ -6,18 +6,26 @@ import {
     fetchCampaignStatistics
 } from "@/modules/advertising/repository/advertising";
 import {AdvertisingRepository} from "@/modules/advertising/repository/repository";
-import {generateDatesFrom} from "@/shared/utils/date.utils";
+import {generateDatesFrom, parseYerevanWithCurrentTime} from "@/shared/utils/date.utils";
 import {fetchApiReportData} from "@/infrastructure/clients/utils/report";
 import {get62DayRanges} from '@/shared/utils/date.utils';
-import decimal from 'decimal.js';
-import dayjs from 'dayjs';
+import dayjs, {Dayjs} from 'dayjs';
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import Decimal from "decimal.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
 dayjs.extend(customParseFormat);
+
+const D = (v: any) => {
+    if (v == null || v === "") return new Decimal(0);
+    if (typeof v === "string") {
+        v = v.replace(",", "."); // заменяем , на .
+    }
+    return new Decimal(v);
+}
 
 interface CampaignStats {
     id: string;
@@ -57,9 +65,6 @@ interface CampaignReport {
     costPerCart: number;
 }
 
-const toDecimal = (val: unknown) =>
-    decimal(String(val ?? 0).replace(/\s+/g, '').replace(',', '.'));
-
 export class AdvertisingService {
     constructor(private adsRepo: AdvertisingRepository) {
     }
@@ -70,10 +75,10 @@ export class AdvertisingService {
 
     async buildCompany(campaign: CampaignStats): Promise<CampaignReport | null> {
         try {
-            const clicks = toDecimal(campaign.clicks);
-            const views = toDecimal(campaign.views);
-            const moneySpent = toDecimal(campaign.moneySpent);
-            const toCart = toDecimal(campaign.toCart);
+            const clicks = D(campaign.clicks);
+            const views = D(campaign.views);
+            const moneySpent = D(campaign.moneySpent);
+            const toCart = D(campaign.toCart);
 
             return {
                 id: campaign.id,
@@ -92,12 +97,12 @@ export class AdvertisingService {
                 clicks: clicks.toNumber(),
                 moneySpent: moneySpent.toDecimalPlaces(2).toNumber(),
                 views: views.toNumber(),
-                avgBid: toDecimal(campaign.avgBid).toDecimalPlaces(2).toNumber(),
-                weeklyBudget: toDecimal(campaign.weeklyBudget).toNumber(),
+                avgBid: D(campaign.avgBid).toNumber(),
+                weeklyBudget: D(campaign.weeklyBudget).toNumber(),
                 toCart: toCart.toNumber(),
 
-                orders: toDecimal(campaign.orders).toNumber(),
-                ordersMoney: toDecimal(campaign.ordersMoney).toDecimalPlaces(2).toNumber(),
+                orders: D(campaign.orders).toNumber(),
+                ordersMoney: D(campaign.ordersMoney).toDecimalPlaces(2).toNumber(),
 
                 crToCart: clicks.gt(0)
                     ? toCart.div(clicks).mul(100).toDecimalPlaces(2).toNumber()
@@ -112,14 +117,14 @@ export class AdvertisingService {
         }
     };
 
-    async fetchPpcCampaigns(date: string): Promise<CampaignStats[]> {
+    async fetchPpcCampaigns(date: Dayjs): Promise<CampaignStats[]> {
         logger.info(`🚀 Загружаем кампании на дату: ${date}`);
 
         const campaigns: CampaignStats[] = [];
 
         const dailyStats = await fetchDailyCampaignStatistics({
-            dateFrom: date,
-            dateTo: date,
+            dateFrom: date.format('YYYY-MM-DD'),
+            dateTo: date.format('YYYY-MM-DD'),
         });
 
         const onlyPpcCampaigns = (dailyStats as CampaignStats[]).filter(
@@ -131,13 +136,13 @@ export class AdvertisingService {
                 const objects = await fetchCampaignObjects({campaignId: campaign.id});
                 const [{placement}] = await fetchCampaignList({
                     campaignIds: campaign.id,
-                    dateFrom: date,
-                    dateTo: date
+                    dateFrom: date.format('YYYY-MM-DD'),
+                    dateTo: date.format('YYYY-MM-DD')
                 });
                 const [stats] = await fetchCampaignStatistics({
                     campaignIds: campaign.id,
-                    dateFrom: date,
-                    dateTo: date,
+                    dateFrom: date.format('YYYY-MM-DD'),
+                    dateTo: date.format('YYYY-MM-DD'),
                 });
 
                 if (objects[0]) {
@@ -159,13 +164,13 @@ export class AdvertisingService {
         return campaigns;
     }
 
-    async fetchCpoCampaigns({from, to}: { from: string, to: string }) {
+    async fetchCpoCampaigns({from, to}: { from: Dayjs, to: Dayjs }) {
         try {
             const products = await fetchApiReportData({
                 url: '/api/client/statistics/json',
                 params: {
-                    from: `${from}T00:00:00Z`,
-                    to: `${to}T23:59:59Z`,
+                    from: from.format('YYYY-MM-DD[T]00:00:00[Z]'),
+                    to: to.format('YYYY-MM-DD[T]23:59:59[Z]'),
                     campaigns: ["12950100"]
                 },
             });
@@ -183,7 +188,7 @@ export class AdvertisingService {
 
     async sync() {
         const lastAd = await this.adsRepo.lastRow();
-        const dateOnly = lastAd?.savedAt ? lastAd?.savedAt.toISOString().split("T")[0] : '2025-08-28';
+        const dateOnly = lastAd?.savedAt ? dayjs(lastAd?.savedAt) : dayjs('2025-08-26', 'YYYY-MM-DD');
 
         const dates = generateDatesFrom(dateOnly);
         const datesCPO = get62DayRanges(dateOnly);
@@ -192,32 +197,33 @@ export class AdvertisingService {
 
         for (const date of dates) {
             logger.info(`📌 Обработка даты: ${date}`);
-            const yerevan = dayjs(date).tz("Asia/Yerevan");
-            const fakeUtc = dayjs.utc(yerevan.format("YYYY-MM-DDTHH:mm:ss.SSS"));
-            const now = dayjs();
-
-            const dateSave = fakeUtc
-                .hour(now.hour())
-                .minute(now.minute())
-                .second(now.second())
-                .millisecond(now.millisecond());
 
             const campaigns = await this.fetchPpcCampaigns(date);
 
             for (const campaign of campaigns) {
                 const campaignBuild = await this.buildCompany(campaign);
 
-                await this.adsRepo.create(campaignBuild, dateSave.toDate());
+                const dateSave = parseYerevanWithCurrentTime(date);
+
+                await this.adsRepo.createStat(campaignBuild, dateSave.toDate());
+
+                await this.adsRepo.create({
+                    campaignId: campaign?.id,
+                    productId: campaign?.sku,
+                    type: campaign?.type,
+                    moneySpent: campaign?.moneySpent
+                }, date.toDate());
             }
         }
 
         for (const date of datesCPO) {
             const data = await this.fetchCpoCampaigns(date);
+
             if (!Array.isArray(data) || data.length === 0) continue;
 
             for (const cpoItem of data) {
                 const campaign = await this.buildCompany({
-                    id: `12950100-${cpoItem.orderId}`,
+                    id: '12950100',
 
                     // Остальные поля
                     title: cpoItem.title ?? '',
@@ -237,25 +243,24 @@ export class AdvertisingService {
                     costPerCart: 0,
 
                     // Числовые поля: приводим с запятых к числу
-                    moneySpent: toDecimal(cpoItem.moneySpent).toDecimalPlaces(2).toNumber(),
-                    avgBid: toDecimal(cpoItem.bidValue).toDecimalPlaces(2).toNumber(),
+                    moneySpent: D(cpoItem.moneySpent).toDecimalPlaces(2).toNumber(),
+                    avgBid: D(cpoItem.bidValue).toDecimalPlaces(2).toNumber(),
                     weeklyBudget: 0,
 
                     orders: 0,
                     ordersMoney: 0,
                 });
 
-                const yerevan = dayjs.tz(cpoItem.date, "DD.MM.YYYY", "Asia/Yerevan");
-                const fakeUtc = dayjs.utc(yerevan.format("YYYY-MM-DDTHH:mm:ss.SSS"));
-                const now = dayjs();
+                const dateSave = parseYerevanWithCurrentTime(dayjs(cpoItem.date, 'DD.MM.YYYY'));
 
-                const dateSave = fakeUtc
-                    .hour(now.hour())
-                    .minute(now.minute())
-                    .second(now.second())
-                    .millisecond(now.millisecond());
+                await this.adsRepo.createStat(campaign, dateSave.toDate());
 
-                await this.adsRepo.create(campaign, dateSave.toDate());
+                await this.adsRepo.create({
+                    campaignId: campaign?.id,
+                    productId: campaign?.sku,
+                    type: campaign?.type,
+                    moneySpent: campaign?.moneySpent,
+                }, dayjs(cpoItem.date, 'DD.MM.YYYY').toDate());
             }
         }
 

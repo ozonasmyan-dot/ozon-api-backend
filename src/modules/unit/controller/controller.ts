@@ -17,23 +17,4 @@ export const unitController = {
 
         res.json(data);
     },
-
-    async getAll(req: Request, res: Response): Promise<any> {
-        const data = await unitService.getAll();
-        if (data.length === 0) {
-            throw new AppError<undefined>('Units not found', 404);
-        }
-
-        res.json(data);
-    },
-
-    async importData(req: Request, res: Response): Promise<void> {
-        const data = await unitService.getImportData();
-        if (data.length === 0) {
-            throw new AppError<undefined>('Units not found', 404);
-        }
-
-        const csv = toCsv(data as any[]);
-        res.header('Content-Type', 'text/csv').send(csv);
-    },
 };

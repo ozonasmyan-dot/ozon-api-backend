@@ -1,14 +1,16 @@
 import container from '@/infrastructure/di/container';
-import {UnitRepository} from '@/modules/unit/repository/repository';
 import {logger} from '@/shared/logger';
-import { stringify } from "csv-stringify/sync";
+import {stringify} from "csv-stringify/sync";
 import {Telegraf} from 'telegraf';
 import {BOT_TOKEN, CRON_CHAT_ID} from '@/config';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
-import {AdvertisingRepository} from "@/modules/advertising/repository/repository";
 import {AdvertisingService} from "@/modules/advertising/service/service";
+import prisma from "@/infrastructure/database/prismaClient";
+import prismaClient from "@/infrastructure/database/prismaClient";
+import {UnitService} from "@/modules/unit/service/service";
+import Decimal from "decimal.js";
 
 dayjs.extend(utc);
 dayjs.extend(timezone);
@@ -22,48 +24,61 @@ const productsSku: Record<string, string> = {
     '1828048540': 'Сумка бордовая',
 };
 
-const adsRepo = container.resolve(AdvertisingRepository);
-const service = container.resolve(AdvertisingService);
-const unitRepo = container.resolve(UnitRepository);
-const telegram = new Telegraf(BOT_TOKEN).telegram;
+const adTypes = {
+    'PLACEMENT_TOP_PROMOTION': 'Вывод в топ',
+    'CPO': 'Оплата за клик'
+}
 
+const unitService = container.resolve(UnitService);
+const service = container.resolve(AdvertisingService);
+const telegram = new Telegraf(BOT_TOKEN).telegram;
 
 const sendCsv = async (): Promise<void> => {
     try {
+        const todayStart = dayjs().startOf('day').subtract(1, "day").format('YYYY-MM-DD[T]00:00:00[Z]');
+        const todayEnd = dayjs().endOf('day').subtract(1, "day").format('YYYY-MM-DD[T]23:59:59[Z]');
+
         const resultMap: Record<string, any> = {};
-        const cpoAgg = await adsRepo.getCPOAgg();
-        const otherAds = await adsRepo.otherAds();
-        const units = await unitRepo.getTodayUnitBySku();
-        const headers = [
-            'productId', 'moneySpent', 'views', 'clicks', 'toCart', 'savedAt', 'unitCount', 'unitMoney', 'drr'
-        ];
+        const ads = await prisma.advertisingStat.findMany({
+            where: {
+                savedAt: {
+                    gte: todayStart,
+                    lte: todayEnd
+                },
+            },
+            select: {
+                productId: true,
+                type: true,
+                moneySpent: true,
+                views: true,
+                clicks: true,
+                toCart: true,
+                ctr: true,
+                avgBid: true,
+                crToCart: true,
+                costPerCart: true,
+            },
+        });
+        const units = await prisma.unitNew.groupBy({
+            by: ["sku"],
+            where: {
+                createdAt: {
+                    gte: todayStart,
+                    lte: todayEnd
+                },
+            },
+            _count: {id: true},
+            _sum: {price: true},
+        });
 
-        for (const c of cpoAgg) {
-            resultMap[c.productId] = {
-                productId: c.productId,
-                ads: [
-                    {
-                        type: "CPO",
-                        moneySpent: c._sum.moneySpent ?? 0,
-                        views: c._sum.views ?? 0,
-                        clicks: c._sum.clicks ?? 0,
-                        toCart: c._sum.toCart ?? 0,
-                        ctr: c._sum.ctr ?? 0,
-                        avgBid: c._sum.avgBid ?? 0,
-                        crToCart: c._sum.crToCart ?? 0,
-                        costPerCart: c._sum.costPerCart ?? 0,
-                    },
-                ],
-                totals: {moneyCount: 0, count: 0},
-            };
-        }
-
-        for (const ad of otherAds) {
+        for (const ad of ads) {
             if (!resultMap[ad.productId]) {
                 resultMap[ad.productId] = {
                     productId: ad.productId,
                     ads: [],
-                    totals: {moneyCount: 0, count: 0},
+                    totals: {
+                        moneyCount: 0, count: 0
+                    },
                 };
             }
             resultMap[ad.productId].ads.push(ad);
@@ -74,7 +89,7 @@ const sendCsv = async (): Promise<void> => {
                 resultMap[u.sku] = {
                     productId: u.sku,
                     ads: [],
-                    totals: { moneyCount: 0, count: 0 },
+                    totals: {moneyCount: 0, count: 0},
                 };
             }
             resultMap[u.sku].totals = {
@@ -88,74 +103,66 @@ const sendCsv = async (): Promise<void> => {
         for (const product of finalArray) {
             let rows: any[] = [];
 
+            const soldAmount = product.totals.moneyCount;
+            const soldCount = product.totals.count;
+            const moneySpent = await prismaClient.advertising.aggregate({
+                where: {
+                    productId: product.productId,
+                    savedAt: {
+                        gte: todayStart,
+                        lte: todayEnd
+                    },
+                },
+                _sum: {
+                    moneySpent: true,
+                }
+            });
+            const drr = soldCount !== 0 && moneySpent._sum.moneySpent != null ? Decimal(((moneySpent._sum.moneySpent ?? 0) / soldAmount) * 100).toDecimalPlaces(0) : '';
+
             // строки по рекламе
             for (const ad of product.ads) {
                 rows.push({
-                    productId: productsSku[product.productId],
-                    type: ad.type,
-                    moneySpent: ad.moneySpent,
-                    views: ad.views,
-                    clicks: ad.clicks,
-                    toCart: ad.toCart,
-                    ctr: ad.ctr,
-                    avgBid: ad.avgBid,
-                    crToCart: ad.crToCart,
-                    costPerCart: ad.costPerCart,
-                    soldCount: product.totals.count,
-                    soldAmount: product.totals.moneyCount,
+                    //@ts-ignore
+                    "Тип кампании": adTypes[ad.type],
+                    "Расход": ad.moneySpent,
+                    "Просмотры": ad.views,
+                    "Клики": ad.clicks,
+                    "В корзину": ad.toCart,
+                    "CTR": ad.ctr,
+                    "Цена за клик": ad.avgBid,
+                    "Конверсия в корзину": ad.crToCart,
+                    "Цена корзины": ad.costPerCart,
                 });
             }
 
             // сортировка по moneySpent (DESC)
-            rows = rows.sort((a, b) => (b.moneySpent ?? 0) - (a.moneySpent ?? 0));
-
-            // считаем DRR
-            const totalAdsSpent = rows.reduce((sum, r) => sum + (Number(r.moneySpent) || 0), 0);
-            const soldAmount = product.totals.moneyCount;
-            const soldCount = product.totals.count;
-            const drr = soldAmount > 0 ? ((totalAdsSpent / soldAmount) * 100).toFixed(1) : "0";
-
-            // нижняя строка TOTAL
-            rows.push({
-                productId: "TOTAL",
-                type: "",
-                moneySpent: "",
-                views: "",
-                clicks: "",
-                toCart: "",
-                ctr: "",
-                avgBid: "",
-                crToCart: "",
-                costPerCart: "",
-                soldCount,
-                soldAmount,
-                drr,
-            });
+            rows = rows.sort((a, b) => (b.Расход ?? 0) - (a.Расход ?? 0));
 
             // превращаем в CSV
             const csv = stringify(rows, {
                 header: true,
                 columns: [
-                    "productId",
-                    "type",
-                    "moneySpent",
-                    "views",
-                    "clicks",
-                    "toCart",
-                    "ctr",
-                    "avgBid",
-                    "crToCart",
-                    "costPerCart",
-                    "soldCount",
-                    "soldAmount",
-                    "drr",
+                    "Тип кампании",
+                    "Расход",
+                    "Просмотры",
+                    "Клики",
+                    "В корзину",
+                    "CTR",
+                    "Цена за клик",
+                    "Конверсия в корзину",
+                    "Цена корзины",
                 ],
             });
 
-            // отправляем файл
             await telegram.sendDocument(CRON_CHAT_ID, {
                 source: Buffer.from(csv),
                 filename: `${productsSku[product.productId]}.csv`,
+            }, {
+                caption: `*DRR:* ${drr ? drr : 0}%
+*Количество продаж:* ${soldCount} шт.
+*Сумма продаж:* ${soldAmount} руб.
+*Расход:* ${moneySpent._sum.moneySpent !== null ? Decimal(moneySpent._sum.moneySpent).toDecimalPlaces(2) : 0} руб.`,
+                parse_mode: 'Markdown',
             });
         }
     } catch (err) {
@@ -167,14 +174,17 @@ const FIVE_MINUTES = 5 * 60 * 1000;
 
 const run = async () => {
     try {
-        const dateStr = dayjs().format("YYYY-MM-DD - HH:mm:ss");
+        const dateStr = dayjs().subtract(2, 'day').format("YYYY-MM-DD - HH:mm:ss");
 
+
+        // await unitService.sync();
         // await service.sync();
 
         await telegram.sendMessage(
             CRON_CHAT_ID,
             `✅ Получен репорт ${dateStr}`
         );
+
 
         await sendCsv();
     } catch (error) {
