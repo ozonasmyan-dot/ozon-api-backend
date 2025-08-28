@@ -1,62 +1,67 @@
-export const generateDatesFrom = (startDateStr: string) => {
-    const result = [];
-    const [year, month, day] = startDateStr.split('-').map(Number);
+import dayjs, {Dayjs} from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+import isSameOrBefore from "dayjs/plugin/isSameOrBefore";
 
-    // Москва — UTC+3, создаём дату как локальную
-    let current = new Date(Date.UTC(year, month - 1, day, 0, 0, 0));
-    const now = new Date();
-    const moscowNow = new Date(now.getTime() + 3 * 60 * 60 * 1000); // прибавляем 3 часа
+dayjs.extend(isSameOrBefore);
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
-    current.setUTCHours(0, 0, 0, 0);
-    moscowNow.setUTCHours(0, 0, 0, 0);
+export const generateDatesFrom = (startDate: Dayjs): Dayjs[] => {
+    const result: Dayjs[] = [];
 
-    while (current <= moscowNow) {
-        // Преобразуем к московскому времени и берём YYYY-MM-DD
-        const moscowDate = new Date(current.getTime() + 3 * 60 * 60 * 1000);
-        const dateStr = moscowDate.toISOString().slice(0, 10);
-        result.push(dateStr);
-        current.setUTCDate(current.getUTCDate() + 1);
+    // Приводим вход к Dayjs UTC
+    let current = dayjs.isDayjs(startDate)
+        ? startDate.utc().startOf("day")
+        : dayjs.utc(startDate, "YYYY-MM-DD").startOf("day");
+
+    const now = dayjs.utc().startOf("day");
+
+    while (current.isSameOrBefore(now)) {
+        result.push(current); // ✅ возвращаем Dayjs
+        current = current.add(1, "day");
     }
 
     return result;
-}
+};
 
 export const get62DayRanges = (
-    start: string,
+    start: Dayjs,
     days = 50
-): { from: string; to: string }[] => {
-    const result: { from: string; to: string }[] = [];
+): { from: Dayjs; to: Dayjs }[] => {
+    const result: { from: Dayjs; to: Dayjs }[] = [];
 
-    let from = new Date(start);
-    const today = new Date();
+    let from = dayjs().startOf('day');
+    const today = dayjs.utc().startOf("day");
 
-    while (from <= today) {
-        const to = new Date(from);
-        to.setDate(to.getDate() + days);
+    while (from.isSameOrBefore(today)) {
+        let to = from.add(days, "day");
 
-        // если вылезли за сегодня — обрежем
-        if (to > today) {
-            result.push({
-                from: formatDate(from),
-                to: formatDate(today),
-            });
+        if (to.isAfter(today)) {
+            result.push({from, to});
             break;
         }
 
-        result.push({
-            from: formatDate(from),
-            to: formatDate(to),
-        });
+        result.push({from, to});
 
-        // следующий from = предыдущий to + 1 день
-        from = new Date(to);
-        from.setDate(from.getDate() + 1);
+        from = to.add(1, "day");
     }
 
     return result;
-
-    function formatDate(d: Date): string {
-        return d.toISOString().split("T")[0]; // YYYY-MM-DD
-    }
 };
 
+export const parseYerevanWithCurrentTime = (dateStr: Dayjs): Dayjs => {
+    // исходная дата в Ереване
+    const yerevan = dayjs.tz(dateStr, "DD.MM.YYYY", "Asia/Yerevan");
+
+    // приводим к UTC
+    const baseUtc = dayjs.utc(yerevan.format("YYYY-MM-DDTHH:mm:ss.SSS"));
+
+    // подставляем текущее время
+    const now = dayjs();
+    return baseUtc
+        .hour(now.hour())
+        .minute(now.minute())
+        .second(now.second())
+        .millisecond(now.millisecond());
+};

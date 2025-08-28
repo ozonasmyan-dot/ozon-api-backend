@@ -12,14 +12,4 @@ export const advertisingController = {
 
         res.json({data: 'OK'});
     },
-
-    async importData(req: Request, res: Response) {
-        const data = await advertisingService.getAll();
-        if (data.length === 0) {
-            throw new AppError<undefined>('Ads not found', 404);
-        }
-
-        const csv = toCsv(data as any[]);
-        res.header('Content-Type', 'text/csv').send(csv);
-    },
 };

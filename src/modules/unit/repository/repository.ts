@@ -189,21 +189,4 @@ export class UnitRepository {
             totalServices: Number(u.totalServices),
         }));
     }
-
-    async getTodayUnitBySku() {
-        const todayStart = dayjs().startOf('day').format('YYYY-MM-DD[T]00:00:00[Z]');
-        const todayEnd = dayjs().endOf('day').format('YYYY-MM-DD[T]23:59:59[Z]');
-
-        return prisma.unitNew.groupBy({
-            by: ["sku"],
-            where: {
-                createdAt: {
-                    gte: todayStart,
-                    lte: todayEnd
-                },
-            },
-            _count: {id: true},
-            _sum: {price: true},
-        });
-    }
 }
