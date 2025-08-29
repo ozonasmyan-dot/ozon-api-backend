@@ -1,11 +1,11 @@
 import {Telegraf, Markup, Context} from 'telegraf';
 import {BOT_TOKEN} from '@/config';
-import {AnalyticsService} from '@/modules/analytics/service/service';
-import {DrrProductDto, DrrResponseDto} from '@/modules/analytics/dto/drr.dto';
+import {AnalyticsService} from '@/modules/analytics/application/analytics.service';
+import {DrrProductDto, DrrResponseDto} from '@/modules/analytics/application/dto/drr.dto';
 import dayjs from 'dayjs';
 
-import {UnitService} from '@/modules/unit/service/service';
-import {AdvertisingService} from '@/modules/advertising/service/service';
+import {UnitService} from '@/modules/unit/application/unit.service';
+import {AdvertisingService} from '@/modules/advertising/application/advertising.service';
 import container from "@/infrastructure/di/container";
 
 const unitService = container.resolve(UnitService);

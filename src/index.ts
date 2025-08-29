@@ -1,14 +1,14 @@
 import express from 'express';
 import '@/infrastructure/di/container';
-import unitRouter from "@/modules/unit/route";
-import advertisingRouter from "@/modules/advertising/route";
-import analyticsRouter from "@/modules/analytics/route";
+import unitRouter from "@/modules/unit/presentation/unit.router";
+import advertisingRouter from "@/modules/advertising/presentation/advertising.router";
+import analyticsRouter from "@/modules/analytics/presentation/analytics.router";
 import cors from "cors";
 import { PORT, CORS_ORIGIN } from '@/config';
 import errorHandler from "@/shared/middleware/errorHandler";
 import { logger } from '@/shared/logger';
 import '@/bot';
-import '@/modules/advertising/cron';
+import '@/modules/advertising/infrastructure/advertising.cron';
 
 const app = express();
 
