@@ -1,12 +1,12 @@
 import {sellerClient} from '@/infrastructure/clients/ozon/seller';
 import {performanceClient} from '@/infrastructure/clients/ozon/performance';
-import {AdvertisingRepository} from '@/modules/advertising/repository/repository';
-import {AdvertisingService} from '@/modules/advertising/service/service';
-import {AnalyticsService} from '@/modules/analytics/service/service';
-import {UnitRepository} from '@/modules/unit/repository/repository';
-import {PostingsService} from '@/modules/posting/service/service';
-import {TransactionService} from '@/modules/transaction/service/service';
-import {UnitService} from '@/modules/unit/service/service';
+import {AdvertisingRepository} from '@/modules/advertising/infrastructure/advertising.repository';
+import {AdvertisingService} from '@/modules/advertising/application/advertising.service';
+import {AnalyticsService} from '@/modules/analytics/application/analytics.service';
+import {UnitRepository} from '@/modules/unit/infrastructure/unit.repository';
+import {PostingsService} from '@/modules/posting/application/posting.service';
+import {TransactionService} from '@/modules/transaction/application/transaction.service';
+import {UnitService} from '@/modules/unit/application/unit.service';
 
 type Token<T> = string | symbol | { new(...args: any[]): T };
 
