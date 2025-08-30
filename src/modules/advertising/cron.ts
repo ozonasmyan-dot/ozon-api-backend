@@ -178,7 +178,7 @@ const sendCsv = async (): Promise<void> => {
     }
 }
 
-const FIVE_MINUTES = 5 * 60 * 1000;
+const FIVE_MINUTES = 2 * 60 * 60 * 1000;
 
 const run = async () => {
     try {
