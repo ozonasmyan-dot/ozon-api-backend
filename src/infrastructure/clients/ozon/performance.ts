@@ -1,5 +1,6 @@
 import axios, {AxiosInstance, InternalAxiosRequestConfig} from 'axios';
 import { PERFORMANCE_CLIENT_ID, PERFORMANCE_CLIENT_SECRET } from '@/config';
+import { waitRateLimit } from '@/shared/utils/rateLimit';
 
 // Здесь будем хранить токен и время его жизни
 let performanceToken: string | null = null;
@@ -15,6 +16,8 @@ const refreshPerformanceToken = async (): Promise<string> => {
     if (performanceToken && now < performanceTokenExpiry) {
         return performanceToken;
     }
+
+    await waitRateLimit();
 
     const response = await axios.post(
         'https://api-performance.ozon.ru:443/api/client/token',
@@ -52,9 +55,10 @@ performanceClient.interceptors.request.use(
     async (
         config: InternalAxiosRequestConfig
     ): Promise<InternalAxiosRequestConfig> => {
+        await waitRateLimit();
         config.headers = config.headers ?? {};
         const token = await refreshPerformanceToken();
-            config.headers['Authorization'] = `Bearer ${token}`;
+        config.headers['Authorization'] = `Bearer ${token}`;
         return config as InternalAxiosRequestConfig;
     }
 );
