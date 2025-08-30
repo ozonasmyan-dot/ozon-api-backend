@@ -35,10 +35,14 @@ const telegram = new Telegraf(BOT_TOKEN).telegram;
 
 const sendCsv = async (): Promise<void> => {
     try {
-        const todayStart = dayjs().startOf('day').subtract(1, "day").format('YYYY-MM-DD[T]00:00:00[Z]');
-        const todayEnd = dayjs().endOf('day').subtract(1, "day").format('YYYY-MM-DD[T]23:59:59[Z]');
+        const todayStartUnits = dayjs().subtract(1, 'day').format('YYYY-MM-DD[T]21:00:00[Z]');
+        const todayEndUnits = dayjs().format('YYYY-MM-DD[T]20:59:59[Z]');
+
+        const todayStart = dayjs().startOf('day').format('YYYY-MM-DD[T]00:00:00[Z]');
+        const todayEnd = dayjs().endOf('day').format('YYYY-MM-DD[T]23:59:59[Z]');
 
         const resultMap: Record<string, any> = {};
+
         const ads = await prisma.advertisingStat.findMany({
             where: {
                 savedAt: {
@@ -59,19 +63,23 @@ const sendCsv = async (): Promise<void> => {
                 costPerCart: true,
             },
         });
+
         const units = await prisma.unitNew.groupBy({
             by: ["sku"],
             where: {
                 createdAt: {
-                    gte: todayStart,
-                    lte: todayEnd
+                    gte: todayStartUnits,
+                    lte: todayEndUnits
                 },
             },
             _count: {id: true},
             _sum: {price: true},
         });
 
+
         for (const ad of ads) {
+            console.log(resultMap[ad.productId])
+
             if (!resultMap[ad.productId]) {
                 resultMap[ad.productId] = {
                     productId: ad.productId,
@@ -174,17 +182,15 @@ const FIVE_MINUTES = 5 * 60 * 1000;
 
 const run = async () => {
     try {
-        const dateStr = dayjs().subtract(2, 'day').format("YYYY-MM-DD - HH:mm:ss");
+        const dateStr = dayjs().format("YYYY-MM-DD - HH:mm:ss");
 
-
-        // await unitService.sync();
-        // await service.sync();
+        await unitService.sync();
+        await service.sync();
 
         await telegram.sendMessage(
             CRON_CHAT_ID,
             `✅ Получен репорт ${dateStr}`
         );
-
 
         await sendCsv();
     } catch (error) {

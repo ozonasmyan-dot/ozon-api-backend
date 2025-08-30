@@ -260,7 +260,7 @@ export class AdvertisingService {
                     productId: campaign?.sku,
                     type: campaign?.type,
                     moneySpent: campaign?.moneySpent,
-                }, dayjs(cpoItem.date, 'DD.MM.YYYY').toDate());
+                }, dayjs.utc(cpoItem.date, 'DD.MM.YYYY').toDate());
             }
         }
 
