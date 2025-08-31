@@ -198,6 +198,7 @@ export class UnitRepository {
                    SUM("price") as "ordersMoney",
                    COUNT(*) as "ordersCount"
             FROM "UnitNew"
+            WHERE "createdAt" IS NOT NULL
             GROUP BY DATE("createdAt"), "sku"
             ORDER BY DATE("createdAt"), "sku";
         `;
