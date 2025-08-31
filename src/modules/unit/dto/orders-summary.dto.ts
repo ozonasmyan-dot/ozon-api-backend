@@ -1,5 +1,5 @@
 export interface OrdersSummaryDto {
-    date: string;
+    createdAt: string;
     productId: string;
     ordersMoney: number;
     ordersCount: number;

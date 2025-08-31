@@ -279,8 +279,8 @@ export class UnitService {
     async getOrdersSummary() {
         const data = await this.unitRepo.getOrdersSummary();
 
-        return data.map(({ date, productId, ordersMoney, ordersCount }) => ({
-            date: dayjs(date).format('YYYY-MM-DD'),
+        return data.map(({ createdAt, productId, ordersMoney, ordersCount }) => ({
+            createdAt: dayjs(createdAt).format('YYYY-MM-DD'),
             productId,
             ordersMoney,
             ordersCount,
