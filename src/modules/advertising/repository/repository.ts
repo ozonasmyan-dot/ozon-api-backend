@@ -28,10 +28,6 @@ export class AdvertisingRepository {
     }
 
     async create(campaign: any, date: Date): Promise<any> {
-        if (!campaign.campaignId || !campaign.productId) {
-            throw new Error(`❌ Missing campaignId or productId in campaign: ${JSON.stringify(campaign)}`);
-        }
-
         return this.prismaClient.advertising.upsert({
             where: {
                 savedAt_campaignId_productId: {
@@ -41,18 +37,36 @@ export class AdvertisingRepository {
                 }
             },
             update: {
-                ...campaign,
-                campaignId: String(campaign.campaignId),
-                productId: String(campaign.productId),
+                campaignId: String(campaign.id),
+                productId: String(campaign.sku),
+                type: campaign.type,
+                moneySpent: campaign.moneySpent,
+                views: campaign.views,
+                clicks: campaign.clicks,
+                toCart: campaign.toCart,
+                ctr: campaign.ctr,
+                weeklyBudget: campaign.weeklyBudget,
+                status: campaign.status ? campaign.status : '',
+                avgBid: campaign.avgBid,
+                crToCart: campaign.crToCart,
+                costPerCart: campaign.costPerCart,
                 savedAt: date,
-                moneySpent: Number(campaign.moneySpent),
             },
             create: {
-                ...campaign,
-                campaignId: String(campaign.campaignId),
-                productId: String(campaign.productId),
+                campaignId: String(campaign.id),
+                productId: String(campaign.sku),
+                type: campaign.type,
+                moneySpent: campaign.moneySpent,
+                views: campaign.views,
+                clicks: campaign.clicks,
+                toCart: campaign.toCart,
+                ctr: campaign.ctr,
+                weeklyBudget: campaign.weeklyBudget,
+                status: campaign.status ? campaign.status : '',
+                avgBid: campaign.avgBid,
+                crToCart: campaign.crToCart,
+                costPerCart: campaign.costPerCart,
                 savedAt: date,
-                moneySpent: Number(campaign.moneySpent),
             },
         });
     }

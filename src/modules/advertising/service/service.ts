@@ -256,21 +256,9 @@ export class AdvertisingService {
 
                 await this.adsRepo.createStat(campaignBuild, dateSave.toDate());
 
-                await this.adsRepo.create({
-                    campaignId: campaign?.id,
-                    productId: campaign?.sku,
-                    type: campaign?.type,
-                    views: campaign?.views,
-                    clicks: campaign?.clicks,
-                    toCart: campaign?.toCart,
-                    ctr: campaign?.ctr,
-                    weeklyBudget: campaign?.weeklyBudget,
-                    status: campaign?.status,
-                    avgBid: campaign?.avgBid,
-                    crToCart: campaign?.crToCart,
-                    costPerCart: campaign?.costPerCart,
-                    moneySpent: campaign?.moneySpent,
-                }, date.toDate());
+                console.log(campaignBuild);
+
+                await this.adsRepo.create(campaignBuild, date.toDate());
             }
         }
 
@@ -313,21 +301,7 @@ export class AdvertisingService {
 
                 await this.adsRepo.createStat(campaign, dateSave.toDate());
 
-                await this.adsRepo.create({
-                    campaignId: campaign?.id,
-                    productId: campaign?.sku,
-                    type: campaign?.type,
-                    views: campaign?.views,
-                    clicks: campaign?.clicks,
-                    toCart: campaign?.toCart,
-                    ctr: campaign?.ctr,
-                    weeklyBudget: campaign?.weeklyBudget,
-                    status: campaign?.status,
-                    avgBid: campaign?.avgBid,
-                    crToCart: campaign?.crToCart,
-                    costPerCart: campaign?.costPerCart,
-                    moneySpent: campaign?.moneySpent,
-                }, dayjs.utc(cpoItem.date, 'DD.MM.YYYY').toDate());
+                await this.adsRepo.create(campaign, dayjs.utc(cpoItem.date, 'DD.MM.YYYY').toDate());
             }
         }
 

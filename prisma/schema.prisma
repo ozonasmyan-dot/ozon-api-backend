@@ -31,15 +31,15 @@ model Advertising {
   productId    String
   type         String
   moneySpent   Float
-  views        Int      @default(0)
-  clicks       Int      @default(0)
-  toCart       Int      @default(0)
-  ctr          Float    @default(0)
-  weeklyBudget Int      @default(0)
-  status       String   @default("")
-  avgBid       Float    @default(0)
-  crToCart     Float    @default(0)
-  costPerCart  Float    @default(0)
+  views        Int
+  clicks       Int
+  toCart       Int
+  ctr          Float
+  weeklyBudget Int
+  status       String
+  avgBid       Float
+  crToCart     Float
+  costPerCart  Float
   savedAt      DateTime
 
   @@unique([savedAt, campaignId, productId])
