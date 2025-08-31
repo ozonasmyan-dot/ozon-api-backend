@@ -8,7 +8,7 @@ import { PORT, CORS_ORIGIN } from '@/config';
 import errorHandler from "@/shared/middleware/errorHandler";
 import { logger } from '@/shared/logger';
 import '@/bot';
-import '@/modules/advertising/cron';
+// import '@/modules/advertising/cron';
 
 const app = express();
 

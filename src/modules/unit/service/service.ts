@@ -1,13 +1,13 @@
 import dayjs from 'dayjs';
 import minMax from 'dayjs/plugin/minMax';
-import { PostingsService } from '@/modules/posting/service/service';
-import { TransactionService } from '@/modules/transaction/service/service';
-import { UnitDto } from '@/modules/unit/dto/unit.dto';
-import { economy } from '@/modules/unit/utils/economy.utils';
-import { TransactionDto } from '@/modules/transaction/dto/transaction.dto';
-import { UnitRepository } from '@/modules/unit/repository/repository';
-import { PostingDto } from '@/modules/posting/dto/posting.dto';
-import { logger } from '@/shared/logger';
+import {PostingsService} from '@/modules/posting/service/service';
+import {TransactionService} from '@/modules/transaction/service/service';
+import {UnitDto} from '@/modules/unit/dto/unit.dto';
+import {economy} from '@/modules/unit/utils/economy.utils';
+import {TransactionDto} from '@/modules/transaction/dto/transaction.dto';
+import {UnitRepository} from '@/modules/unit/repository/repository';
+import {PostingDto} from '@/modules/posting/dto/posting.dto';
+import {logger} from '@/shared/logger';
 
 dayjs.extend(minMax);
 
@@ -28,7 +28,7 @@ export class UnitService {
             : null;
 
         const unit: UnitDto = 'status' in item
-            ? { ...item, services: [...item.services] }
+            ? {...item, services: [...item.services]}
             : {
                 ...item,
                 status: item.statusOzon,
@@ -228,6 +228,51 @@ export class UnitService {
     }
 
     async getAll() {
-        return await this.unitRepo.getAll();
+        const data = await this.unitRepo.getAll();
+
+        return data.map((
+            {
+                product,
+                orderId,
+                orderNumber,
+                postingNumber,
+                inProcessAt,
+                deliveryType,
+                city,
+                isPremium,
+                paymentTypeGroupName,
+                warehouseName,
+                oldPrice,
+                currencyCode,
+                clusterFrom,
+                clusterTo,
+                status,
+                margin,
+                createdAt,
+                costPrice,
+                totalServices
+            }
+        ) => ({
+            product,
+            orderId,
+            orderNumber,
+            postingNumber,
+            createdAt: dayjs(createdAt).format('YYYY-MM-DD'),
+            inProcessAt: dayjs(inProcessAt).format('YYYY-MM-DD'),
+            deliveryType,
+            city,
+            isPremium,
+            paymentTypeGroupName,
+            warehouseName,
+            oldPrice,
+            currencyCode,
+            clusterFrom,
+            clusterTo,
+            status,
+            margin,
+            costPrice,
+            totalServices,
+            flag: 1,
+        }));
     }
 }
