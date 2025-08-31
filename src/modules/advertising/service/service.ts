@@ -27,6 +27,21 @@ const D = (v: any) => {
     return new Decimal(v);
 }
 
+const productsSku: Record<string, string> = {
+    '2586085325': 'Шапка беж',
+    '2586059276': 'Шапка хаки',
+    '1763835247': 'Шапка черная',
+    '1828048543': 'Сумка черная',
+    '1828048513': 'Сумка серая',
+    '1828048540': 'Сумка бордовая',
+};
+
+const adTypes = {
+    'PLACEMENT_TOP_PROMOTION': 'Вывод в топ',
+    'CPO': 'Оплата за клик',
+    'PLACEMENT_SEARCH_AND_CATEGORY': 'Трафареты',
+}
+
 interface CampaignStats {
     id: string;
     title?: string;
@@ -70,7 +85,41 @@ export class AdvertisingService {
     }
 
     async getAll() {
-        return this.adsRepo.getAll();
+        const data = await this.adsRepo.getAll();
+
+        return data.map((
+            {
+                campaignId,
+                productId,
+                type,
+                views,
+                moneySpent,
+                toCart,
+                ctr,
+                weeklyBudget,
+                status,
+                avgBid,
+                crToCart,
+                costPerCart,
+                savedAt
+            }
+        ) => ({
+            campaignId,
+            productId: productsSku[productId],
+            // @ts-ignore
+            type: adTypes[type],
+            views,
+            moneySpent,
+            toCart,
+            ctr,
+            weeklyBudget,
+            status,
+            avgBid,
+            crToCart,
+            costPerCart,
+            savedAt: dayjs(savedAt).format('YYYY-MM-DD'),
+            flag: 1,
+        }));
     }
 
     async buildCompany(campaign: CampaignStats): Promise<CampaignReport | null> {
@@ -211,7 +260,16 @@ export class AdvertisingService {
                     campaignId: campaign?.id,
                     productId: campaign?.sku,
                     type: campaign?.type,
-                    moneySpent: campaign?.moneySpent
+                    views: campaign?.views,
+                    clicks: campaign?.clicks,
+                    toCart: campaign?.toCart,
+                    ctr: campaign?.ctr,
+                    weeklyBudget: campaign?.weeklyBudget,
+                    status: campaign?.status,
+                    avgBid: campaign?.avgBid,
+                    crToCart: campaign?.crToCart,
+                    costPerCart: campaign?.costPerCart,
+                    moneySpent: campaign?.moneySpent,
                 }, date.toDate());
             }
         }
@@ -259,6 +317,15 @@ export class AdvertisingService {
                     campaignId: campaign?.id,
                     productId: campaign?.sku,
                     type: campaign?.type,
+                    views: campaign?.views,
+                    clicks: campaign?.clicks,
+                    toCart: campaign?.toCart,
+                    ctr: campaign?.ctr,
+                    weeklyBudget: campaign?.weeklyBudget,
+                    status: campaign?.status,
+                    avgBid: campaign?.avgBid,
+                    crToCart: campaign?.crToCart,
+                    costPerCart: campaign?.costPerCart,
                     moneySpent: campaign?.moneySpent,
                 }, dayjs.utc(cpoItem.date, 'DD.MM.YYYY').toDate());
             }

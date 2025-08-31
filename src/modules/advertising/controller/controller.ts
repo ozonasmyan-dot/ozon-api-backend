@@ -12,4 +12,20 @@ export const advertisingController = {
 
         res.json({data: 'OK'});
     },
+
+    async getAll(req: Request, res: Response): Promise<void> {
+        const data = await advertisingService.getAll();
+        if (data.length === 0) {
+            throw new AppError<undefined>('Advertising not found', 404);
+        }
+
+        if (req.query.format === 'csv') {
+            res.header('Content-Type', 'text/csv');
+            res.attachment('advertising.csv');
+            res.send(toCsv(data as unknown as Record<string, unknown>[]));
+            return;
+        }
+
+        res.json(data);
+    },
 };
