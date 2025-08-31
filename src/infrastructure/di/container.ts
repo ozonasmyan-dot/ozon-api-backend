@@ -6,6 +6,7 @@ import {AnalyticsService} from '@/modules/analytics/service/service';
 import {UnitRepository} from '@/modules/unit/repository/repository';
 import {PostingsService} from '@/modules/posting/service/service';
 import {TransactionService} from '@/modules/transaction/service/service';
+import {TransactionRepository} from '@/modules/transaction/repository/repository';
 import {UnitService} from '@/modules/unit/service/service';
 
 type Token<T> = string | symbol | { new(...args: any[]): T };
@@ -40,6 +41,7 @@ container.register('performanceClient', () => performanceClient);
 // Repositories
 container.register(AdvertisingRepository, () => new AdvertisingRepository());
 container.register(UnitRepository, () => new UnitRepository());
+container.register(TransactionRepository, () => new TransactionRepository());
 
 // Services
 container.register(AdvertisingService, () => new AdvertisingService(
@@ -47,7 +49,9 @@ container.register(AdvertisingService, () => new AdvertisingService(
 ));
 
 container.register(PostingsService, () => new PostingsService());
-container.register(TransactionService, () => new TransactionService());
+container.register(TransactionService, () => new TransactionService(
+    container.resolve(TransactionRepository),
+));
 
 container.register(UnitService, () => new UnitService(
     container.resolve(UnitRepository),

@@ -75,3 +75,21 @@ model UnitNew {
 
   @@unique([postingNumber])
 }
+
+model Transaction {
+  id                String   @id @default(cuid())
+  operationId       Int      @unique
+  operationType     String
+  operationDate     DateTime
+  operationTypeName String
+  deliveryCharge        Float
+  returnDeliveryCharge  Float
+  accrualsForSale       Float
+  saleCommission        Float
+  amount            Float
+  type              String
+  postingNumber     String?
+  items             Json
+  services          Json
+}
+

@@ -3,6 +3,7 @@ import '@/infrastructure/di/container';
 import unitRouter from "@/modules/unit/route";
 import advertisingRouter from "@/modules/advertising/route";
 import analyticsRouter from "@/modules/analytics/route";
+import transactionRouter from "@/modules/transaction/route";
 import cors from "cors";
 import { PORT, CORS_ORIGIN } from '@/config';
 import errorHandler from "@/shared/middleware/errorHandler";
@@ -20,6 +21,7 @@ app.use(cors({
 app.use('/unit', unitRouter);
 app.use('/ads', advertisingRouter);
 app.use("/analytics", analyticsRouter);
+app.use('/transactions', transactionRouter);
 
 app.use(errorHandler);
 
