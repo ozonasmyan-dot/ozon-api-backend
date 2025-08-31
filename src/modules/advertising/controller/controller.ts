@@ -21,6 +21,7 @@ export const advertisingController = {
 
         if (req.query.format === 'csv') {
             res.header('Content-Type', 'text/csv');
+            res.attachment('advertising.csv');
             res.send(toCsv(data as unknown as Record<string, unknown>[]));
             return;
         }

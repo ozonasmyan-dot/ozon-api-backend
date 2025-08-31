@@ -26,6 +26,7 @@ export const unitController = {
 
         if (req.query.format === 'csv') {
             res.header('Content-Type', 'text/csv');
+            res.attachment('units.csv');
             res.send(toCsv(data as unknown as Record<string, unknown>[]));
             return;
         }
