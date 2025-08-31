@@ -36,6 +36,12 @@ const productsSku: Record<string, string> = {
     '1828048540': 'Сумка бордовая',
 };
 
+const adTypes = {
+    'PLACEMENT_TOP_PROMOTION': 'Вывод в топ',
+    'CPO': 'Оплата за клик',
+    'PLACEMENT_SEARCH_AND_CATEGORY': 'Трафареты',
+}
+
 interface CampaignStats {
     id: string;
     title?: string;
@@ -100,7 +106,8 @@ export class AdvertisingService {
         ) => ({
             campaignId,
             productId: productsSku[productId],
-            type,
+            // @ts-ignore
+            type: adTypes[type],
             views,
             moneySpent,
             toCart,
