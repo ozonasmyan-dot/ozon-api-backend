@@ -275,4 +275,15 @@ export class UnitService {
             flag: 1,
         }));
     }
+
+    async getOrdersSummary() {
+        const data = await this.unitRepo.getOrdersSummary();
+
+        return data.map(({ date, productId, ordersMoney, ordersCount }) => ({
+            date: dayjs(date).format('YYYY-MM-DD'),
+            productId,
+            ordersMoney,
+            ordersCount,
+        }));
+    }
 }

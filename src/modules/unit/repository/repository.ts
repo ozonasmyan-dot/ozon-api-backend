@@ -3,6 +3,7 @@ import {UnitDto} from "@/modules/unit/dto/unit.dto";
 import prisma from "@/infrastructure/database/prismaClient";
 import {OrderItem} from "@/modules/analytics/dto/items.dto";
 import dayjs from "dayjs";
+import {OrdersSummaryDto} from "@/modules/unit/dto/orders-summary.dto";
 
 export class UnitRepository {
     constructor(private prismaClient: PrismaClient = prisma) {
@@ -187,6 +188,25 @@ export class UnitRepository {
             margin: Number(u.margin),
             costPrice: Number(u.costPrice),
             totalServices: Number(u.totalServices),
+        }));
+    }
+
+    async getOrdersSummary(): Promise<OrdersSummaryDto[]> {
+        const rows = await this.prismaClient.$queryRaw<Array<{date: string; productId: string; ordersMoney: bigint; ordersCount: bigint;}>>`
+            SELECT DATE("createdAt") as date,
+                   "sku" as productId,
+                   SUM("price") as ordersMoney,
+                   COUNT(*) as ordersCount
+            FROM "UnitNew"
+            GROUP BY DATE("createdAt"), "sku"
+            ORDER BY DATE("createdAt"), "sku";
+        `;
+
+        return rows.map(r => ({
+            date: r.date,
+            productId: r.productId,
+            ordersMoney: Number(r.ordersMoney),
+            ordersCount: Number(r.ordersCount),
         }));
     }
 }
