@@ -256,8 +256,6 @@ export class AdvertisingService {
 
                 await this.adsRepo.createStat(campaignBuild, dateSave.toDate());
 
-                console.log(campaignBuild);
-
                 await this.adsRepo.create(campaignBuild, date.toDate());
             }
         }

@@ -195,9 +195,12 @@ export class UnitRepository {
         const units = await this.prismaClient.unitNew.findMany({
             select: {
                 createdAt: true,
-                sku: true,
+                product: true,
                 price: true,
             },
+            orderBy: {
+                createdAt: 'desc'
+            }
         });
 
         const summaryMap = new Map<string, OrdersSummaryDto>();
@@ -208,7 +211,7 @@ export class UnitRepository {
             }
 
             const date = dayjs(u.createdAt).format('YYYY-MM-DD');
-            const key = `${date}_${u.sku}`;
+            const key = `${date}_${u.product}`;
 
             const existing = summaryMap.get(key);
             if (existing) {
@@ -217,17 +220,13 @@ export class UnitRepository {
             } else {
                 summaryMap.set(key, {
                     createdAt: date,
-                    productId: u.sku,
+                    productId: u.product,
                     ordersMoney: Number(u.price),
                     ordersCount: 1,
                 });
             }
         }
 
-        return Array.from(summaryMap.values()).sort(
-            (a, b) =>
-                a.createdAt.localeCompare(b.createdAt) ||
-                a.productId.localeCompare(b.productId)
-        );
+        return Array.from(summaryMap.values())
     }
 }

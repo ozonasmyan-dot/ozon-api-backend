@@ -32,13 +32,11 @@ export class AdvertisingRepository {
             where: {
                 savedAt_campaignId_productId: {
                     savedAt: date,
-                    campaignId: String(campaign.campaignId),
-                    productId: String(campaign.productId),
-                }
+                    campaignId: String(campaign.id),
+                    productId: String(campaign.sku),
+                },
             },
             update: {
-                campaignId: String(campaign.id),
-                productId: String(campaign.sku),
                 type: campaign.type,
                 moneySpent: campaign.moneySpent,
                 views: campaign.views,
@@ -46,7 +44,7 @@ export class AdvertisingRepository {
                 toCart: campaign.toCart,
                 ctr: campaign.ctr,
                 weeklyBudget: campaign.weeklyBudget,
-                status: campaign.status ? campaign.status : '',
+                status: campaign.status ?? '',
                 avgBid: campaign.avgBid,
                 crToCart: campaign.crToCart,
                 costPerCart: campaign.costPerCart,
@@ -62,7 +60,7 @@ export class AdvertisingRepository {
                 toCart: campaign.toCart,
                 ctr: campaign.ctr,
                 weeklyBudget: campaign.weeklyBudget,
-                status: campaign.status ? campaign.status : '',
+                status: campaign.status ?? '',
                 avgBid: campaign.avgBid,
                 crToCart: campaign.crToCart,
                 costPerCart: campaign.costPerCart,

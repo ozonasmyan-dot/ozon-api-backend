@@ -16,12 +16,12 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const productsSku: Record<string, string> = {
-    '2586085325': 'Шапка беж',
-    '2586059276': 'Шапка хаки',
-    '1763835247': 'Шапка черная',
-    '1828048543': 'Сумка черная',
-    '1828048513': 'Сумка серая',
-    '1828048540': 'Сумка бордовая',
+    '2586085325': 'шапка_флисовая_бежевая',
+    '2586059276': 'шапка_флисовая_хаки',
+    '1763835247': 'шапка_флисовая_черная',
+    '1828048543': 'сумка_кросбоди_черная',
+    '1828048513': 'сумка_кросбоди_светло_серая',
+    '1828048540': 'сумка_кросбоди_Бордовая',
 };
 
 const adTypes = {
@@ -79,8 +79,6 @@ const sendCsv = async (): Promise<void> => {
 
 
         for (const ad of ads) {
-            console.log(resultMap[ad.productId])
-
             if (!resultMap[ad.productId]) {
                 resultMap[ad.productId] = {
                     productId: ad.productId,
