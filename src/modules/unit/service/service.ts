@@ -277,15 +277,6 @@ export class UnitService {
     }
 
     async getOrdersSummary() {
-        const data = await this.unitRepo.getOrdersSummary();
-
-        return data
-            .filter(({ createdAt }) => createdAt !== null)
-            .map(({ createdAt, productId, ordersMoney, ordersCount }) => ({
-                createdAt: dayjs(createdAt).format('YYYY-MM-DD'),
-                productId,
-                ordersMoney,
-                ordersCount,
-            }));
+        return this.unitRepo.getOrdersSummary();
     }
 }

@@ -192,22 +192,42 @@ export class UnitRepository {
     }
 
     async getOrdersSummary(): Promise<OrdersSummaryDto[]> {
-        const rows = await this.prismaClient.$queryRaw<Array<{ createdAt: string; productId: string; ordersMoney: bigint; ordersCount: bigint; }>>`
-            SELECT DATE("createdAt") as "createdAt",
-                   "sku" as "productId",
-                   SUM("price") as "ordersMoney",
-                   COUNT(*) as "ordersCount"
-            FROM "UnitNew"
-            WHERE "createdAt" IS NOT NULL
-            GROUP BY DATE("createdAt"), "sku"
-            ORDER BY DATE("createdAt"), "sku";
-        `;
+        const units = await this.prismaClient.unitNew.findMany({
+            select: {
+                createdAt: true,
+                sku: true,
+                price: true,
+            },
+        });
 
-        return rows.map(r => ({
-            createdAt: r.createdAt,
-            productId: r.productId,
-            ordersMoney: Number(r.ordersMoney),
-            ordersCount: Number(r.ordersCount),
-        }));
+        const summaryMap = new Map<string, OrdersSummaryDto>();
+
+        for (const u of units) {
+            if (!u.createdAt) {
+                continue;
+            }
+
+            const date = dayjs(u.createdAt).format('YYYY-MM-DD');
+            const key = `${date}_${u.sku}`;
+
+            const existing = summaryMap.get(key);
+            if (existing) {
+                existing.ordersMoney += Number(u.price);
+                existing.ordersCount += 1;
+            } else {
+                summaryMap.set(key, {
+                    createdAt: date,
+                    productId: u.sku,
+                    ordersMoney: Number(u.price),
+                    ordersCount: 1,
+                });
+            }
+        }
+
+        return Array.from(summaryMap.values()).sort(
+            (a, b) =>
+                a.createdAt.localeCompare(b.createdAt) ||
+                a.productId.localeCompare(b.productId)
+        );
     }
 }
