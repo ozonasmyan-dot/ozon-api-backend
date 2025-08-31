@@ -275,4 +275,8 @@ export class UnitService {
             flag: 1,
         }));
     }
+
+    async getOrdersSummary() {
+        return this.unitRepo.getOrdersSummary();
+    }
 }

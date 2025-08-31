@@ -3,6 +3,7 @@ import {UnitDto} from "@/modules/unit/dto/unit.dto";
 import prisma from "@/infrastructure/database/prismaClient";
 import {OrderItem} from "@/modules/analytics/dto/items.dto";
 import dayjs from "dayjs";
+import {OrdersSummaryDto} from "@/modules/unit/dto/orders-summary.dto";
 
 export class UnitRepository {
     constructor(private prismaClient: PrismaClient = prisma) {
@@ -188,5 +189,45 @@ export class UnitRepository {
             costPrice: Number(u.costPrice),
             totalServices: Number(u.totalServices),
         }));
+    }
+
+    async getOrdersSummary(): Promise<OrdersSummaryDto[]> {
+        const units = await this.prismaClient.unitNew.findMany({
+            select: {
+                createdAt: true,
+                sku: true,
+                price: true,
+            },
+        });
+
+        const summaryMap = new Map<string, OrdersSummaryDto>();
+
+        for (const u of units) {
+            if (!u.createdAt) {
+                continue;
+            }
+
+            const date = dayjs(u.createdAt).format('YYYY-MM-DD');
+            const key = `${date}_${u.sku}`;
+
+            const existing = summaryMap.get(key);
+            if (existing) {
+                existing.ordersMoney += Number(u.price);
+                existing.ordersCount += 1;
+            } else {
+                summaryMap.set(key, {
+                    createdAt: date,
+                    productId: u.sku,
+                    ordersMoney: Number(u.price),
+                    ordersCount: 1,
+                });
+            }
+        }
+
+        return Array.from(summaryMap.values()).sort(
+            (a, b) =>
+                a.createdAt.localeCompare(b.createdAt) ||
+                a.productId.localeCompare(b.productId)
+        );
     }
 }

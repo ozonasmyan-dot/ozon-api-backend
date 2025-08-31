@@ -6,5 +6,6 @@ const router = Router();
 
 router.get('/sync', asyncHandler(unitController.sync));
 router.get('/getall', asyncHandler(unitController.getAll));
+router.get('/orders-summary', asyncHandler(unitController.getOrdersSummary));
 
 export default router;
