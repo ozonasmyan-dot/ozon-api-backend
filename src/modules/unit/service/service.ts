@@ -2,6 +2,7 @@ import dayjs from 'dayjs';
 import minMax from 'dayjs/plugin/minMax';
 import {PostingsService} from '@/modules/posting/service/service';
 import {TransactionService} from '@/modules/transaction/service/service';
+import {AdvertisingRepository} from '@/modules/advertising/repository/repository';
 import {UnitDto} from '@/modules/unit/dto/unit.dto';
 import {economy} from '@/modules/unit/utils/economy.utils';
 import {TransactionDto} from '@/modules/transaction/dto/transaction.dto';
@@ -15,7 +16,8 @@ export class UnitService {
     constructor(
         private unitRepo: UnitRepository,
         private postingsService: PostingsService,
-        private transactionsService: TransactionService
+        private transactionsService: TransactionService,
+        private adsRepo: AdvertisingRepository,
     ) {
     }
 
@@ -230,6 +232,31 @@ export class UnitService {
     async getAll() {
         const data = await this.unitRepo.getAll();
 
+        const monthSkuCount = new Map<string, Map<string, number>>();
+        const months = new Set<string>();
+
+        data.forEach((u) => {
+            const month = dayjs(u.createdAt).format('YYYY-MM');
+            months.add(month);
+            if (!monthSkuCount.has(month)) {
+                monthSkuCount.set(month, new Map());
+            }
+            const skuMap = monthSkuCount.get(month)!;
+            skuMap.set(u.sku, (skuMap.get(u.sku) || 0) + 1);
+        });
+
+        const monthAds = new Map<string, Map<string, number>>();
+        await Promise.all(Array.from(months).map(async (m) => {
+            const start = dayjs(m).startOf('month').format('YYYY-MM-DD[T]00:00:00[Z]');
+            const end = dayjs(m).endOf('month').format('YYYY-MM-DD[T]23:59:59[Z]');
+            const adsAgg = await this.adsRepo.getAdsAggByProductType(start, end);
+            const adsMap = new Map<string, number>();
+            adsAgg.items.forEach((a) => {
+                adsMap.set(a.productId, (adsMap.get(a.productId) || 0) + a.moneySpent);
+            });
+            monthAds.set(m, adsMap);
+        }));
+
         return data.map((
             {
                 product,
@@ -250,30 +277,39 @@ export class UnitService {
                 margin,
                 createdAt,
                 costPrice,
-                totalServices
+                totalServices,
+                sku,
             }
-        ) => ({
-            product,
-            orderId,
-            orderNumber,
-            postingNumber,
-            createdAt: dayjs(createdAt).format('YYYY-MM-DD'),
-            inProcessAt: dayjs(inProcessAt).format('YYYY-MM-DD'),
-            deliveryType,
-            city,
-            isPremium,
-            paymentTypeGroupName,
-            warehouseName,
-            oldPrice,
-            currencyCode,
-            clusterFrom,
-            clusterTo,
-            status,
-            margin,
-            costPrice,
-            totalServices,
-            flag: 1,
-        }));
+        ) => {
+            const month = dayjs(createdAt).format('YYYY-MM');
+            const count = monthSkuCount.get(month)?.get(sku) || 0;
+            const totalAds = monthAds.get(month)?.get(sku) || 0;
+            const ads = count ? Number((totalAds / count).toFixed(2)) : 0;
+
+            return {
+                product,
+                orderId,
+                orderNumber,
+                postingNumber,
+                createdAt: dayjs(createdAt).format('YYYY-MM-DD'),
+                inProcessAt: dayjs(inProcessAt).format('YYYY-MM-DD'),
+                deliveryType,
+                city,
+                isPremium,
+                paymentTypeGroupName,
+                warehouseName,
+                oldPrice,
+                currencyCode,
+                clusterFrom,
+                clusterTo,
+                status,
+                ads,
+                margin: Number((margin - ads).toFixed(2)),
+                costPrice,
+                totalServices,
+                flag: 1,
+            };
+        });
     }
 
     async getOrdersSummary() {

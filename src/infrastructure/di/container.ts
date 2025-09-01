@@ -53,6 +53,7 @@ container.register(UnitService, () => new UnitService(
     container.resolve(UnitRepository),
     container.resolve(PostingsService),
     container.resolve(TransactionService),
+    container.resolve(AdvertisingRepository),
 ));
 
 container.register(AnalyticsService, () => new AnalyticsService(
