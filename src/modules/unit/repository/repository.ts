@@ -90,11 +90,12 @@ export class UnitRepository {
         });
     }
 
-    async getAll(): Promise<UnitNew[]> {
+    async getAll(filter: Prisma.UnitNewWhereInput = {}): Promise<UnitNew[]> {
         return this.prismaClient.unitNew.findMany({
+            where: filter,
             orderBy: {
                 createdAt: 'desc',
-            }
+            },
         });
     }
 

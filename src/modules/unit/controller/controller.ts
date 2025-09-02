@@ -3,6 +3,7 @@ import container from '@/infrastructure/di/container';
 import { UnitService } from "@/modules/unit/service/service";
 import { AppError } from "@/shared/types/AppError";
 import { toCsv } from "@/shared/utils/csv.utils";
+import { Prisma } from '@prisma/client';
 
 const unitService = container.resolve(UnitService);
 
@@ -19,7 +20,36 @@ export const unitController = {
     },
 
     async getAll(req: Request, res: Response): Promise<void> {
-        const data = await unitService.getAll();
+        const booleanFields = ['isPremium'];
+        const numberFields = ['oldPrice', 'price', 'margin', 'costPrice', 'totalServices'];
+        const dateFields = ['createdAt', 'inProcessAt', 'lastOperationDate'];
+
+        const filter: Prisma.UnitNewWhereInput = {};
+
+        Object.entries(req.query).forEach(([key, value]) => {
+            if (key === 'format' || Array.isArray(value)) {
+                return;
+            }
+
+            const target = filter as Record<string, unknown>;
+            if (booleanFields.includes(key)) {
+                target[key] = value === 'true';
+            } else if (numberFields.includes(key)) {
+                const num = Number(value);
+                if (!isNaN(num)) {
+                    target[key] = num;
+                }
+            } else if (dateFields.includes(key)) {
+                const date = new Date(value as string);
+                if (!isNaN(date.getTime())) {
+                    target[key] = date;
+                }
+            } else {
+                target[key] = value as string;
+            }
+        });
+
+        const data = await unitService.getAll(filter);
         if (data.length === 0) {
             throw new AppError<undefined>('Units not found', 404);
         }
