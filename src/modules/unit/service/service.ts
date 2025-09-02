@@ -316,3 +316,12 @@ export class UnitService {
         return this.unitRepo.getOrdersSummary();
     }
 }
+
+
+[{
+    "name": "MarketplaceRedistributionOfAcquiringOperation",
+    "price": -30.42
+}, {
+    "name": "MarketplaceServiceItemRedistributionLastMileCourier",
+    "price": -10.23
+}, {"name": "MarketplaceServiceItemDirectFlowLogistic", "price": -233.1}, {"name": "SalesCommission", "price": -300.3}]
