@@ -6,7 +6,7 @@
     "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/index.js",
-    "reset:units": "npm run build && node dist/scripts/reset-units.js"
+    "reset:units": "npm run build && node ./scripts/reset-units.js"
   },
   "_moduleAliases": {
     "@": "dist"
