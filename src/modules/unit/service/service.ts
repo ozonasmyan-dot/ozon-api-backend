@@ -9,6 +9,7 @@ import {TransactionDto} from '@/modules/transaction/dto/transaction.dto';
 import {UnitRepository} from '@/modules/unit/repository/repository';
 import {PostingDto} from '@/modules/posting/dto/posting.dto';
 import {logger} from '@/shared/logger';
+import {Prisma} from '@prisma/client';
 
 dayjs.extend(minMax);
 
@@ -229,8 +230,8 @@ export class UnitService {
         await this.combinePostingsAndTransactions();
     }
 
-    async getAll() {
-        const data = await this.unitRepo.getAll();
+    async getAll(filter: Prisma.UnitNewWhereInput = {}) {
+        const data = await this.unitRepo.getAll(filter);
 
         const monthSkuCount = new Map<string, Map<string, number>>();
         const months = new Set<string>();
