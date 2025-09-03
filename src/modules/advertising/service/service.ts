@@ -39,7 +39,7 @@ const productsSku: Record<string, string> = {
 const adTypes = {
     'PLACEMENT_TOP_PROMOTION': 'Вывод в топ',
     'CPO': 'Оплата за клик',
-    'PLACEMENT_SEARCH_AND_CATEGORY': 'Трафареты',
+    'PLACEMENT_SEARCH_AND_CATEGORY': 'Оплата за клик',
 }
 
 interface CampaignStats {
