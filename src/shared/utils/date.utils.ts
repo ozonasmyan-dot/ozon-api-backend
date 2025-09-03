@@ -65,3 +65,27 @@ export const parseYerevanWithCurrentTime = (dateStr: Dayjs): Dayjs => {
         .second(now.second())
         .millisecond(now.millisecond());
 };
+
+/**
+ * Генерирует интервалы по месяцам до сегодняшнего дня
+ * @param start - начальная дата (строка, Date или Dayjs)
+ * @returns массив объектов { from, to } (оба Dayjs)
+ */
+export function generateMonthlyRanges(start: string | Date | Dayjs) {
+    const result: { from: Dayjs; to: Dayjs }[] = [];
+    let from = dayjs(start).startOf("day");
+    const today = dayjs().startOf("day");
+
+    while (from.isBefore(today)) {
+        let to = from.add(1, "month").subtract(1, "day");
+        if (to.isAfter(today)) {
+            to = today;
+        }
+
+        result.push({from, to});
+
+        from = to.add(1, "day");
+    }
+
+    return result;
+}

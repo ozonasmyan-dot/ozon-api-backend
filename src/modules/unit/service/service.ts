@@ -94,15 +94,16 @@ export class UnitService {
             to: dayjs(new Date()).format('YYYY-MM-DD') + 'T23:59:59Z',
         });
 
+        const transactions = await this.transactionsService.getByRange(dayjs('2024-10-01'));
+
+        console.log(transactions);
+
         for (const posting of postings) {
-            const [txsByPosting, txsByOrder] = await Promise.all([
-                this.transactionsService.get({filter: {posting_number: posting.postingNumber}}),
-                this.transactionsService.get({filter: {posting_number: posting.orderNumber}}),
-            ]);
+            const postingTransactions = transactions.filter(t => t.postingNumber === posting.postingNumber || t.postingNumber === posting.orderNumber);
 
             const unit = await this.createUnitItem(
                 posting,
-                [...txsByPosting, ...txsByOrder]
+                postingTransactions,
             );
 
             units.push(unit);
@@ -136,7 +137,7 @@ export class UnitService {
         logger.info('Saving new units');
 
         const postings = await this.postingsService.get({
-            since: lastDate ? dayjs(lastDate).format('YYYY-MM-DD') + 'T00:00:00Z' : dayjs('2025-08-19').format('YYYY-MM-DD') + 'T00:00:00Z',
+            since: dayjs(lastDate).format('YYYY-MM-DD') + 'T00:00:00Z',
             to: dayjs(new Date()).format('YYYY-MM-DD') + 'T23:59:59Z',
         });
 
@@ -154,14 +155,7 @@ export class UnitService {
     async getNewTransactions() {
         const lastDate = await this.unitRepo.lastTransactionDate();
 
-        return await this.transactionsService.get({
-            filter: {
-                date: {
-                    from: (lastDate ? dayjs(lastDate).format('YYYY-MM-DD') : dayjs(new Date()).format('YYYY-MM-DD')) + 'T00:00:00Z',
-                    to: dayjs(new Date()).format('YYYY-MM-DD') + 'T23:59:59Z',
-                }
-            },
-        });
+        return await this.transactionsService.getByRange(dayjs(lastDate));
     }
 
     /**
