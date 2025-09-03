@@ -101,7 +101,8 @@ export class AdvertisingService {
                 avgBid,
                 crToCart,
                 costPerCart,
-                savedAt
+                savedAt,
+                clicks,
             }
         ) => ({
             campaignId,
@@ -117,6 +118,7 @@ export class AdvertisingService {
             avgBid,
             crToCart,
             costPerCart,
+            clicks,
             savedAt: dayjs(savedAt).format('YYYY-MM-DD'),
             flag: 1,
         }));
