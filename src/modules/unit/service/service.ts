@@ -96,8 +96,6 @@ export class UnitService {
 
         const transactions = await this.transactionsService.getByRange(dayjs('2024-10-01'));
 
-        console.log(transactions);
-
         for (const posting of postings) {
             const postingTransactions = transactions.filter(t => t.postingNumber === posting.postingNumber || t.postingNumber === posting.orderNumber);
 
