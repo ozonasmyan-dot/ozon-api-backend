@@ -298,11 +298,11 @@ export class UnitService {
                 clusterTo,
                 status,
                 ads,
-                price,
                 margin: Number((margin - ads).toFixed(2)),
                 costPrice,
                 totalServices,
                 flag: 1,
+                price,
             };
         });
     }
