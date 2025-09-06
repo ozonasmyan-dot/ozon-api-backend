@@ -239,7 +239,7 @@ export class AdvertisingService {
 
     async sync() {
         const lastAd = await this.adsRepo.lastRow();
-        const dateOnly = lastAd?.savedAt ? dayjs(lastAd?.savedAt) : dayjs('2025-08-26', 'YYYY-MM-DD');
+        const dateOnly = lastAd?.savedAt ? dayjs(lastAd?.savedAt) : dayjs('2024-10-01', 'YYYY-MM-DD');
 
         const dates = generateDatesFrom(dateOnly);
         const datesCPO = get62DayRanges(dateOnly);

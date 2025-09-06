@@ -31,20 +31,20 @@ export const get62DayRanges = (
 ): { from: Dayjs; to: Dayjs }[] => {
     const result: { from: Dayjs; to: Dayjs }[] = [];
 
-    let from = dayjs().startOf('day');
-    const today = dayjs.utc().startOf("day");
+    let from = start.startOf("day");
+    const today = dayjs().startOf("day");
 
     while (from.isSameOrBefore(today)) {
         let to = from.add(days, "day");
 
         if (to.isAfter(today)) {
-            result.push({from, to});
+            result.push({ from, to: today });
             break;
         }
 
-        result.push({from, to});
+        result.push({ from, to });
 
-        from = to.add(1, "day");
+        from = to.add(1, "day"); // или просто `to`, если не нужен разрыв
     }
 
     return result;
