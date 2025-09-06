@@ -270,7 +270,7 @@ export class AdvertisingService {
 
             for (const cpoItem of data) {
                 const campaign = await this.buildCompany({
-                    id: `12950100-${cpoItem.sku}`,
+                    id: `12950100-${Date.now()}`,
 
                     // Остальные поля
                     title: cpoItem.title ?? '',
