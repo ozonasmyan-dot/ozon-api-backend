@@ -34,6 +34,7 @@ const productsSku: Record<string, string> = {
     '1828048543': 'сумка_кросбоди_черная',
     '1828048513': 'сумка_кросбоди_светло_серая',
     '1828048540': 'сумка_кросбоди_Бордовая',
+    '1927603466': 'Пингвин'
 };
 
 const adTypes = {
@@ -269,7 +270,7 @@ export class AdvertisingService {
 
             for (const cpoItem of data) {
                 const campaign = await this.buildCompany({
-                    id: '12950100',
+                    id: `12950100-${cpoItem.sku}`,
 
                     // Остальные поля
                     title: cpoItem.title ?? '',
