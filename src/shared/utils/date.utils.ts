@@ -25,9 +25,9 @@ export const generateDatesFrom = (startDate: Dayjs): Dayjs[] => {
     return result;
 };
 
+
 export const get62DayRanges = (
-    start: Dayjs,
-    days = 50
+    start: Dayjs
 ): { from: Dayjs; to: Dayjs }[] => {
     const result: { from: Dayjs; to: Dayjs }[] = [];
 
@@ -35,8 +35,10 @@ export const get62DayRanges = (
     const today = dayjs().startOf("day");
 
     while (from.isSameOrBefore(today)) {
-        let to = from.add(days, "day");
+        // конец текущего месяца
+        let to = from.endOf("month");
 
+        // если "to" выходит за сегодня, обрезаем
         if (to.isAfter(today)) {
             result.push({ from, to: today });
             break;
@@ -44,7 +46,8 @@ export const get62DayRanges = (
 
         result.push({ from, to });
 
-        from = to.add(1, "day"); // или просто `to`, если не нужен разрыв
+        // следующий интервал начинается на следующий день после конца месяца
+        from = to.add(1, "day").startOf("day");
     }
 
     return result;

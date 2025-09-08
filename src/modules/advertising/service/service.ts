@@ -222,8 +222,8 @@ export class AdvertisingService {
             const products = await fetchApiReportData({
                 url: '/api/client/statistics/json',
                 params: {
-                    from: from.format('YYYY-MM-DD[T]00:00:00[Z]'),
-                    to: to.format('YYYY-MM-DD[T]23:59:59[Z]'),
+                    from: dayjs(from).subtract(1, 'day').format('YYYY-MM-DD[T]21:00:00[Z]'),
+                    to: dayjs(to).subtract(1, 'day').format('YYYY-MM-DD[T]21:00:00[Z]'),
                     campaigns: ["12950100"]
                 },
             });
@@ -241,7 +241,7 @@ export class AdvertisingService {
 
     async sync() {
         const lastAd = await this.adsRepo.lastRow();
-        const dateOnly = lastAd?.savedAt ? dayjs(lastAd?.savedAt) : dayjs('2024-10-01', 'YYYY-MM-DD');
+        const dateOnly = lastAd?.savedAt ? dayjs(lastAd?.savedAt) : dayjs('2025-08-01', 'YYYY-MM-DD');
 
         const dates = generateDatesFrom(dateOnly);
         const datesCPO = get62DayRanges(dateOnly);
@@ -271,7 +271,7 @@ export class AdvertisingService {
 
             for (const cpoItem of data) {
                 const campaign = await this.buildCompany({
-                    id: `12950100-${Date.now()}`,
+                    id: Date.now().toString(),
 
                     // Остальные поля
                     title: cpoItem.title ?? '',
