@@ -1,5 +1,5 @@
 let lastRequestTime = 0;
-const MIN_INTERVAL_MS = 300;
+const MIN_INTERVAL_MS = 2000;
 
 export const waitRateLimit = async (): Promise<void> => {
     const now = Date.now();
