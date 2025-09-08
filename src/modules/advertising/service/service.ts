@@ -10,6 +10,7 @@ import {generateDatesFrom, parseYerevanWithCurrentTime} from "@/shared/utils/dat
 import {fetchApiReportData} from "@/infrastructure/clients/utils/report";
 import {get62DayRanges} from '@/shared/utils/date.utils';
 import dayjs, {Dayjs} from 'dayjs';
+import {Prisma} from '@prisma/client';
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -85,8 +86,8 @@ export class AdvertisingService {
     constructor(private adsRepo: AdvertisingRepository) {
     }
 
-    async getAll() {
-        const data = await this.adsRepo.getAll();
+    async getAll(filter: Prisma.AdvertisingWhereInput = {}) {
+        const data = await this.adsRepo.getAll(filter);
 
         return data.map((
             {
@@ -221,8 +222,8 @@ export class AdvertisingService {
             const products = await fetchApiReportData({
                 url: '/api/client/statistics/json',
                 params: {
-                    from: from.format('YYYY-MM-DD[T]00:00:00[Z]'),
-                    to: to.format('YYYY-MM-DD[T]23:59:59[Z]'),
+                    from: dayjs(from).subtract(1, 'day').format('YYYY-MM-DD[T]21:00:00[Z]'),
+                    to: dayjs(to).subtract(1, 'day').format('YYYY-MM-DD[T]21:00:00[Z]'),
                     campaigns: ["12950100"]
                 },
             });
@@ -240,7 +241,7 @@ export class AdvertisingService {
 
     async sync() {
         const lastAd = await this.adsRepo.lastRow();
-        const dateOnly = lastAd?.savedAt ? dayjs(lastAd?.savedAt) : dayjs('2024-10-01', 'YYYY-MM-DD');
+        const dateOnly = lastAd?.savedAt ? dayjs(lastAd?.savedAt) : dayjs('2025-08-01', 'YYYY-MM-DD');
 
         const dates = generateDatesFrom(dateOnly);
         const datesCPO = get62DayRanges(dateOnly);
@@ -270,7 +271,7 @@ export class AdvertisingService {
 
             for (const cpoItem of data) {
                 const campaign = await this.buildCompany({
-                    id: `12950100-${Date.now()}`,
+                    id: Date.now().toString(),
 
                     // Остальные поля
                     title: cpoItem.title ?? '',

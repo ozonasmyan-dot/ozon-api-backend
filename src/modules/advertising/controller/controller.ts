@@ -3,6 +3,7 @@ import container from '@/infrastructure/di/container';
 import {AdvertisingService} from "@/modules/advertising/service/service";
 import { AppError } from "@/shared/types/AppError";
 import { toCsv } from "@/shared/utils/csv.utils";
+import { Prisma } from '@prisma/client';
 
 const advertisingService = container.resolve(AdvertisingService);
 
@@ -14,7 +15,26 @@ export const advertisingController = {
     },
 
     async getAll(req: Request, res: Response): Promise<void> {
-        const data = await advertisingService.getAll();
+        const {from, to, sku} = req.query;
+
+        const filter: Prisma.AdvertisingWhereInput = {};
+
+        if (from || to) {
+            filter.savedAt = {};
+            if (from) {
+                filter.savedAt.gte = new Date(String(from));
+            }
+            if (to) {
+                filter.savedAt.lte = new Date(String(to));
+            }
+        }
+
+        if (sku) {
+            const skuArray = Array.isArray(sku) ? sku.map(String) : [String(sku)];
+            filter.productId = {in: skuArray};
+        }
+
+        const data = await advertisingService.getAll(filter);
         if (data.length === 0) {
             throw new AppError<undefined>('Advertising not found', 404);
         }
