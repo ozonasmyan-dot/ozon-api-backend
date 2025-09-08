@@ -1,4 +1,4 @@
-import {PrismaClient, Advertising} from "@prisma/client";
+import {PrismaClient, Advertising, Prisma} from "@prisma/client";
 import prisma from "@/infrastructure/database/prismaClient";
 import {AdItem} from "@/modules/analytics/dto/items.dto";
 
@@ -77,8 +77,9 @@ export class AdvertisingRepository {
         });
     }
 
-    async getAll(): Promise<Advertising[]> {
+    async getAll(filter: Prisma.AdvertisingWhereInput = {}): Promise<Advertising[]> {
         return this.prismaClient.advertising.findMany({
+            where: filter,
             orderBy: {
                 savedAt: 'desc',
             },

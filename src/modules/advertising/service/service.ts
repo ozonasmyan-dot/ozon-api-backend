@@ -10,6 +10,7 @@ import {generateDatesFrom, parseYerevanWithCurrentTime} from "@/shared/utils/dat
 import {fetchApiReportData} from "@/infrastructure/clients/utils/report";
 import {get62DayRanges} from '@/shared/utils/date.utils';
 import dayjs, {Dayjs} from 'dayjs';
+import {Prisma} from '@prisma/client';
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import customParseFormat from "dayjs/plugin/customParseFormat";
@@ -85,8 +86,8 @@ export class AdvertisingService {
     constructor(private adsRepo: AdvertisingRepository) {
     }
 
-    async getAll() {
-        const data = await this.adsRepo.getAll();
+    async getAll(filter: Prisma.AdvertisingWhereInput = {}) {
+        const data = await this.adsRepo.getAll(filter);
 
         return data.map((
             {
